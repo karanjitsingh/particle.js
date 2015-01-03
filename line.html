@@ -1,0 +1,156 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <style>
+        body {
+            padding:0px;
+            margin:0px;
+        }
+    </style>
+
+
+</head>
+<body bgcolor="#ff0000">
+    <canvas id="canvas" style="float:left;"></canvas>
+    
+</body>
+
+<script>
+    var canvas, H, W, ctx, timer;
+
+    canvas = document.getElementById("canvas");
+    ctx = canvas.getContext("2d");
+    W = window.innerWidth;
+    H = window.innerHeight;
+
+    ctx.fillStyle = "#eee";
+    ctx.fillRect(0, 0, W, H);
+
+    canvas.width = W;
+    canvas.height = H;
+
+    var radius = 0,radius2=0;
+    var pass = 0;
+
+    setTimeout(function () { timer = setInterval(draw, 30); }, 1000);
+
+    function animateDot () {
+
+        ctx.beginPath();
+ 
+        if (pass == 0) {
+            radius += (10 - radius) / 1.3;
+            if (radius > 9.99)
+                pass++;
+        }
+        else if (pass == 1 ) {
+            radius += (6 - radius) / 4;
+            if (radius < 6.01)
+                pass++;
+        }
+
+
+        ctx.fillStyle = "#000";
+        ctx.arc(W / 2, H / 2, radius, 2 * Math.PI, false);
+        ctx.fill();
+        ctx.closePath();
+
+    }
+
+    function animateDot2() {
+
+        ctx.beginPath();
+
+        if (pass == 5) {
+            radius2 += (6 - radius2) / 1.3;
+            if (radius2 > 6-0.1)
+                pass++;
+        }
+
+        var theta = Math.PI / 2;
+        ctx.strokeStyle = "#000";
+        ctx.lineWidth = 2;
+
+        ctx.arc(W / 2 + 36 * Math.cos(Math.PI / 6) + 80, H / 2 - 36 * Math.sin(Math.PI / 6) - 40, radius2, 2 * Math.PI, false);
+        ctx.stroke();
+        ctx.closePath();
+
+    }
+
+    var len = 0, len2 = 0, len3 = 0;
+    
+
+
+    function animateLine1() {
+
+        var theta = Math.PI / 2;
+        ctx.strokeStyle = "#000";
+        ctx.lineWidth = 2;
+
+        if (pass == 2) {
+            len+=(40-len)/2;
+            if (len > 40 - 0.1 )
+                pass++;
+        }
+        ctx.beginPath();
+        ctx.moveTo(W / 2, H / 2);
+        ctx.lineTo(W / 2 + len * Math.cos(theta), H / 2 - len * Math.sin(theta));
+        ctx.stroke();
+        ctx.closePath();
+    }
+
+    function animateLine2() {
+
+        var theta =0;
+        ctx.strokeStyle = "#000";
+        ctx.lineWidth = 2;
+
+        if (pass == 3) {
+            len2 += (80 - len2) / 2;
+            if (len2 > 80 - 0.1)
+                pass++;
+        }
+        ctx.beginPath();
+        ctx.moveTo(W / 2, H / 2 - 40);
+        ctx.lineTo(W / 2 + len2 * Math.cos(theta), H / 2 - len2 * Math.sin(theta) - 40);
+        ctx.stroke();
+        ctx.closePath();
+    }
+
+    function animateLine3() {
+
+        var theta = Math.PI / 6;
+        ctx.strokeStyle = "#000";
+        ctx.lineWidth = 2;
+
+        if (pass == 4) {
+            len3 += (30 - len3) / 2;
+            if (len3 > 30 - 0.1)
+                pass++;
+        }
+        ctx.beginPath();
+        ctx.moveTo(W / 2 + 80, H / 2 - 40);
+        ctx.lineTo(W / 2 + len3 * Math.cos(theta) + 80, H / 2 - len3 * Math.sin(theta) - 40);
+        ctx.stroke();
+        ctx.closePath();
+    }
+
+    function draw() {
+
+        ctx.clearRect(0, 0, W, H);
+        ctx.fillStyle = "rgba(0,0,0,0)";
+        ctx.fillRect(0, 0, W, H);
+ 
+            animateDot();
+
+            animateLine1();
+            animateLine2();
+            animateLine3();
+            animateDot2();
+    }
+</script>
+
+</html>

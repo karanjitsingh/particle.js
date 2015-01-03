@@ -1,0 +1,611 @@
+<!doctype html>
+<html>
+
+<head>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,300' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Roboto:400,100,300' rel='stylesheet' type='text/css'>
+    <style>
+        html, body {
+            height:100%;
+        }
+        body {
+            padding: 0px;
+            margin: 0px;
+            height: 100%;
+            background: #2F5168;
+        }
+
+        @-webkit-keyframes fadeTint {
+            to {
+                opacity: 0;
+            }
+        }
+
+        @-webkit-keyframes slideIncard {
+            from {
+
+                margin-left:50px;
+            }
+            to {
+                opacity:0;
+                margin-left: 100px;
+            }
+        }
+
+        .slideIn {
+            -webkit-animation-name: slideIncard;
+            -webkit-animation-duration: 0.5s;
+            -webkit-animation-timing-function: ease-out;
+            -webkit-animation-fill-mode: forwards;
+            -webkit-animation-play-state: running;
+        }
+
+        #card2 {
+            -webkit-animation-delay: 0.1s;
+        }
+
+        .fadeTintDiv {
+            -webkit-animation-name: fadeTint;
+            -webkit-animation-duration: 0.5s;
+            -webkit-animation-fill-mode: forwards;
+            -webkit-animation-play-state: running;
+        }
+
+
+
+        table{
+            padding:0px;
+            border-spacing:0px;
+            table-layout:fixed;
+        }
+
+        tr,td {
+            border-spacing:0px;
+            padding:0px;
+        }
+
+        ul {
+            list-style: none;
+            margin: 0px 40px 0px 0px;
+        }
+        li {
+            padding:10px;
+        }
+        a {
+            text-decoration:none;
+            font-family:'Open Sans';
+            font-weight:400;
+            font-size:24px;
+            color:#fff;
+        }
+        span.para {
+            font-size: 20px;
+            text-align: justify;
+            width: 395px;
+            padding-left: 5px;
+            line-height: 22px;
+            margin-top: 20px;
+            font-weight: 300;
+            color: #333;
+            font-family: 'Roboto';
+            display: block;
+        }
+        span.heading {
+            display: block;
+            font-family: 'Roboto';
+            font-size: 60px;
+            width: 400px;
+            color: #555;
+            line-height: 60px;
+            font-weight: 100;
+        }
+    </style>
+
+    <script>
+
+    </script>
+</head>
+
+<body>
+<div id="background" style="background-size:cover;height:100%;width:100%;position:fixed; z-index:-1;"></div>
+
+<canvas id=canvas style="margin:0 auto 0 auto; position:absolute;top:0px;z-index:-1"></canvas>
+</body>
+
+
+<script>
+	var canvas = document.getElementById("canvas");
+	var W=window.innerWidth;
+	var H=window.innerHeight;
+	var total = (400 / 1400) * W;
+	total = total < 450 ? 450 : total;
+	var t;
+	canvas.width=W;
+	canvas.height=H;
+	var ctx = canvas.getContext("2d");
+	var t=[0,0];
+	var a=[100,40];
+	var l=[20,1000];
+	var POP_COLORS=["#E04836","#F39D41","#DDDDDD"];
+	var initialDelayDone = false;
+	var mouseX = undefined;
+	var mouseY = undefined;
+	var animatingText = false;
+	var paths = [[], [], []];
+
+
+	var stop = false;
+	var spf = 30;
+	var increment = 0.1;
+
+	var w = 2 * Math.PI / 10;
+	var k = 2 * Math.PI;
+
+	var gravity = 0.5;
+
+
+	var amp = 10;
+
+	paths[0].cx = W / 2;
+	paths[0].cy = H / 2;
+	paths[1].cx = W / 2;
+	paths[1].cy = H / 2;
+	paths[2].cx = 300;
+	paths[2].cy = 200;
+
+	window.onmousemove=function(e){
+	    mouseX = e.clientX;
+	    mouseY = e.clientY;
+	}
+
+	function $id(obj) {
+		return document.getElementById(obj);
+	}
+	
+	function HEXAtoRGBA(hex,a)
+	{
+		hex=hex.substring(1,7);
+		return "rgba(" + parseInt(hex.substr(0,2),16) +
+			","+parseInt(hex.substr(2,2),16) +
+			","+parseInt(hex.substr(4,2),16) +
+			","+a+")";
+	}
+
+	Math.sgn = function (x) {
+	    return (x > 0) - (x < 0);
+	}
+
+	function create_particle(i) {
+		this.i=i;
+		this.x=i/total*W;
+		this.y = H * 2 / 3;
+
+		this.meanY = this.y;
+
+		this.radius=4;
+		this.opacity = 1;
+
+		this.pop=true;
+		this.radiusLag = 1;
+		this.wave = true;
+
+		this.e = 0.8;
+
+		this.vx = 0;
+		this.vy = 0;
+
+		this.originX=0;
+		this.originY=0;
+
+		this.animateOpacity = false;
+		this.originOpacity = 0;
+
+		this.assignedText = false;
+		this.animationDone = true;
+
+		this.gravity = 0;
+
+		this.repel = false;
+
+		this.animate = function () {
+
+		    this.x += this.vx;
+		    this.y += this.vy;
+
+		    if (!this.animationDone && (this.assignedText)) {
+		        this.x += (this.originX - this.x) / 2;
+		        this.y += (this.originY - this.y) / 2;
+
+		        if (Math.abs(this.x - this.originX) < 0.1 && Math.abs(this.y - this.originY) < 0.1) {
+		            this.animationDone = true;
+		        }
+		    }
+		    else if(!this.assignedText)
+		    {
+
+
+		        if ((this.x - this.radius < 0 && this.vx < 0) || (this.x + this.radius > W && this.vx > 0))
+		            this.vx = -1 * this.vx;
+		        if ((this.y - this.radius < 0 && this.vy < 0) || (this.y + this.radius > H && this.vy > 0))
+		            this.vy = -1 * this.vy;
+		    }
+
+		}
+
+		this.propagateWave = function() {
+		    var fixed=true;
+		    var y=0;
+		    var x=0;
+		    for(var i=0;i<t.length;i++)
+		    {
+		        y+=a[i]*Math.sin(w*t[i]-k/l[i]*this.x);
+		        x+=a[i]*Math.cos(w*t[i]-k/l[i]*this.x);
+		        fixed=false;
+				
+		    }
+			
+		    this.y=this.meanY-y;
+			
+			
+			
+		    if (fixed===true)
+		        this.y=this.meanY;
+			
+		    if(x<0)
+		        this.opacity+=(0.3-this.opacity)/1.1;
+		    else
+		        this.opacity=1;
+		}
+
+		this.draw= function(){
+			
+		    if (this.wave == false)
+		        this.animate();
+		    else
+		        this.propagateWave();
+		    if (this.pop) {
+		        if (this.radius < 2.001) {
+		            this.radius += Math.random() * 4;
+		            this.radiusLag = Math.random() * 12 + 12;
+		        }
+		        else
+		            this.radius += (2 - this.radius) / this.radiusLag;
+		    }
+
+		    if (this.animateOpacity)
+		        this.opacity += (this.originOpacity - this.opacity) / 6;
+
+
+
+		    if (this.repel && (mouseX != undefined) && (mouseY != undefined) && this.animationDone) {
+		        var posWRTMouse = {
+		            x: this.x - mouseX,
+		            y: this.y - mouseY
+		        };
+
+		        var posWRTOrigin = {
+		            x: this.x - this.originX,
+		            y: this.y - this.originY
+		        };
+
+		        var distance = Math.sqrt(
+                    posWRTMouse.x * posWRTMouse.x +
+                    posWRTMouse.y * posWRTMouse.y
+                );
+
+		        var distance2 = Math.sqrt(
+                    posWRTOrigin.x * posWRTOrigin.x +
+                    posWRTOrigin.y * posWRTOrigin.y
+                );
+
+		        var forceDirection = {
+		            x: distance!=0?posWRTMouse.x / distance:0,
+		            y: distance!=0?posWRTMouse.y / distance:0
+		        };
+
+		        var gravityDirection = {
+		            x: distance2!=0?posWRTOrigin.x / distance2:0,
+		            y: distance2!=0?posWRTOrigin.y / distance2:0
+		        };
+
+		        var maxDistance = 100;
+
+		        var force = (maxDistance - distance) / maxDistance;
+		        var gravity =   - distance2 / 1000;
+		        gravity = Math.abs(gravity) > 0.1 ?  -0.1 : gravity;
+
+		        if (force < 0) force = 0;
+                
+		        this.vx += forceDirection.x * force * spf + gravityDirection.x * gravity * spf;
+		        this.vy += forceDirection.y * force * spf + gravityDirection.y * gravity * spf;
+
+		        if (isNaN(this.vx))
+		            this.vx = 0;
+		        if (isNaN(this.vy))
+		            this.vy = 0;
+
+		        this.vx *= 0.9;
+		        this.vy *= 0.9;
+
+		    }
+
+			ctx.beginPath();
+			ctx.fillStyle=HEXAtoRGBA(POP_COLORS[this.i%3],this.opacity);
+			ctx.arc(this.x,this.y,this.radius,Math.PI*2,false);
+			ctx.fill();
+			
+		};
+	}
+	
+	var particles=[];
+	
+	for (var i = 0; i < total; i++) {
+	    particles.push(new create_particle(i));
+	}
+		
+	function stoploading() {
+		stop=true;
+	}
+
+	function explode() {
+	    for (var i=0; i < particles.length; i++) {
+	        var p = particles[i];
+	        p.wave = false;
+	        p.assignedText = false;
+	        p.vx = (0.5 - Math.random()) * 20;
+	        p.vy = (0.5 - Math.random()) * 20;
+	    }
+	}
+
+	function line(x1,y1,x2,y2) {
+	    this.x1= x1;
+	    this.x2= x2;
+	    this.y1= y1;
+	    this.y2 = y2;
+	    if(this.x1-this.x2!=0)
+            this.theta = Math.atan((this.y1 - this.y2) / (this.x1 - this.x2));
+	    else
+	        this.theta = Math.PI / 2
+
+	    this.length=Math.sqrt(Math.pow(x2-x1,2)+Math.pow(y2-y1,2));
+
+	    var ck = this.length * Math.cos(this.theta);
+	    var sk = this.length * Math.sin(this.theta);
+
+	    this.getPoint= function(n) {
+	        return { x: this.x1 + n * ck, y: this.y1 + n * sk };
+	    };
+	}
+
+	function circle(x, y, r) {
+	    this.x = x;
+	    this.y = y;
+	    this.r = r;
+
+	    this.length = 2 * Math.PI * r;
+
+	    var k = this.length * Math.PI * 2;
+
+	    this.getPoint = function (n) {
+	        return { x: this.x + Math.sin(n * k) * this.r, y: this.y + Math.cos(n * k) * this.r };
+	    };
+	}
+
+	function arc(x, y, r, sa, ea) {
+	    this.x = x;
+	    this.y = y;
+	    this.sa = sa;
+	    this.ea = ea;
+	    this.theta = this.ea - this.sa;
+	    this.length = this.theta * r;
+
+	    this.getPoint = function (n) {
+	        return { x: this.x + r * Math.cos(this.sa + n * this.theta), y: this.y + r * Math.sin(this.sa + n * this.theta) };
+	    };
+	}
+
+	function drawText() {
+	    paths[0].push(new line(paths[0].cx - 49.5, paths[0].cy - 50, paths[0].cx - 49.5, paths[0].cy + 55));
+	    paths[0].push(new line(paths[0].cx - 49.5, paths[0].cy, paths[0].cx + 70 - 51.5, paths[0].cy));
+	    paths[0].push(new line(paths[0].cx + 70 - 51.5, paths[0].cy - 50, paths[0].cx + 70 - 51.5, paths[0].cy + 55));
+	    paths[0].push(new line(paths[0].cx + 100 - 46.5, paths[0].cy - 23, paths[0].cx + 100 - 46.5, paths[0].cy + 55));
+	    paths[0].push(new circle(paths[0].cx + 100 - 46.5, paths[0].cy - 45, 4));
+
+	    paths[1].push(new line(paths[1].cx - 287.5, paths[1].cy - 50, paths[1].cx - 287.5, paths[1].cy + 55));
+	    paths[1].push(new line(paths[1].cx - 258, paths[1].cy - 50, paths[1].cx - 255.5, paths[1].cy - 11));
+	    paths[1].push(new line(paths[1].cx - 255.5, paths[1].cy - 11, paths[1].cx - 253, paths[1].cy - 50));
+	    paths[1].push(new line(paths[1].cx - 258, paths[1].cy - 50, paths[1].cx - 253, paths[1].cy - 50));
+	    paths[1].push(new line(paths[1].cx - 224.5, paths[1].cy - 23, paths[1].cx - 224.5, paths[1].cy + 55));
+	    paths[1].push(new line(paths[1].cx - 176, paths[1].cy, paths[1].cx - 176, paths[1].cy + 55));
+	    paths[1].push(new arc(paths[1].cx - 200.25, paths[1].cy + 3, 24.5, -Math.PI * (1), 0));
+	    paths[1].push(new line(paths[1].cx - 127.5, paths[1].cy, paths[1].cx - 127.5, paths[1].cy + 55));
+	    paths[1].push(new arc(paths[1].cx - 151.75, paths[1].cy + 3, 24.5, -Math.PI * (1), 0));
+	    paths[1].push(new line(paths[1].cx - 56, paths[1].cy - 50, paths[1].cx - 56, paths[1].cy + 55));
+	    paths[1].push(new line(paths[1].cx - 56, paths[1].cy + 11.5, paths[1].cx + 5.5, paths[1].cy - 50));
+	    paths[1].push(new line(paths[1].cx - 39, paths[1].cy - 6, paths[1].cx + 5.5, paths[1].cy + 55));
+	    paths[1].push(new arc(paths[1].cx + 45, paths[1].cy + 10, 32, -Math.PI * (0.71), -Math.PI * 0.18));
+	    paths[1].push(new arc(paths[1].cx + 72, paths[1].cy + 377, 365, -Math.PI * (0.527), -Math.PI * 0.5));
+	    paths[1].push(new arc(paths[1].cx + 41, paths[1].cy + 33, 19, -Math.PI * (1.5), -Math.PI * 0.5));
+	    paths[1].push(new arc(paths[1].cx + 41, paths[1].cy + 21, 31, Math.PI * (0.05), Math.PI * 0.5));
+	    paths[1].push(new line(paths[1].cx + 72, paths[1].cy - 8, paths[1].cx + 72, paths[1].cy + 55));
+	    paths[1].push(new line(paths[1].cx + 104.5, paths[1].cy - 23, paths[1].cx + 104.5, paths[1].cy + 55));
+	    paths[1].push(new arc(paths[1].cx + 135, paths[1].cy + 10, 32, -Math.PI * (0.87), -Math.PI * 0.44));
+	    paths[1].push(new line(paths[1].cx + 207, paths[1].cy - 8, paths[1].cx + 207, paths[1].cy + 55));
+	    paths[1].push(new arc(paths[1].cx + 180, paths[1].cy + 10, 32, -Math.PI * (0.71), -Math.PI * 0.18));
+	    paths[1].push(new arc(paths[1].cx + 207, paths[1].cy + 377, 365, -Math.PI * (0.527), -Math.PI * 0.5));
+	    paths[1].push(new arc(paths[1].cx + 176, paths[1].cy + 33, 19, -Math.PI * (1.5), -Math.PI * 0.5));
+	    paths[1].push(new arc(paths[1].cx + 176, paths[1].cy + 21, 31, Math.PI * (0.05), Math.PI * 0.5));
+	    paths[1].push(new line(paths[1].cx + 238, paths[1].cy - 23, paths[1].cx + 238, paths[1].cy + 55));
+	    paths[1].push(new arc(paths[1].cx + 268, paths[1].cy + 9, 30, -Math.PI * (0.91), -Math.PI * (0.19)));
+	    paths[1].push(new line(paths[1].cx + 293, paths[1].cy - 8, paths[1].cx + 293, paths[1].cy + 55));
+
+	    paths[2].push(new line(paths[2].cx - 172, paths[2].cy - 50, paths[2].cx - 172, paths[2].cy + 55));
+	    paths[2].push(new line(paths[2].cx - 172, paths[2].cy + 11.5, paths[2].cx - 110.5, paths[2].cy - 50));
+	    paths[2].push(new line(paths[2].cx - 155, paths[2].cy - 6, paths[2].cx - 110.5, paths[2].cy + 55));
+	    paths[2].push(new arc(paths[2].cx - 71, paths[2].cy + 10, 32, -Math.PI * (0.71), -Math.PI * 0.18));
+	    paths[2].push(new arc(paths[2].cx - 44, paths[2].cy + 377, 365, -Math.PI * (0.527), -Math.PI * 0.5));
+	    paths[2].push(new arc(paths[2].cx - 75, paths[2].cy + 33, 19, -Math.PI * (1.5), -Math.PI * 0.5));
+	    paths[2].push(new arc(paths[2].cx - 75, paths[2].cy + 21, 31, Math.PI * (0.05), Math.PI * 0.5));
+	    paths[2].push(new line(paths[2].cx - 44, paths[2].cy - 8, paths[2].cx - 44, paths[2].cy + 55));
+	    paths[2].push(new line(paths[2].cx - 11.5, paths[2].cy - 23, paths[2].cx - 11.5, paths[2].cy + 55));
+	    paths[2].push(new arc(paths[2].cx + 19, paths[2].cy + 10, 32, -Math.PI * (0.87), -Math.PI * 0.44));
+	    paths[2].push(new line(paths[2].cx + 91, paths[2].cy - 8, paths[2].cx + 91, paths[2].cy + 55));
+	    paths[2].push(new arc(paths[2].cx + 64, paths[2].cy + 10, 32, -Math.PI * (0.71), -Math.PI * 0.18));
+	    paths[2].push(new arc(paths[2].cx + 91, paths[2].cy + 377, 365, -Math.PI * (0.527), -Math.PI * 0.5));
+	    paths[2].push(new arc(paths[2].cx + 60, paths[2].cy + 33, 19, -Math.PI * (1.5), -Math.PI * 0.5));
+	    paths[2].push(new arc(paths[2].cx + 60, paths[2].cy + 21, 31, Math.PI * (0.05), Math.PI * 0.5));
+	    paths[2].push(new line(paths[2].cx + 122, paths[2].cy - 23, paths[2].cx + 122, paths[2].cy + 55));
+	    paths[2].push(new arc(paths[2].cx + 152, paths[2].cy + 9, 30, -Math.PI * (0.91), -Math.PI * (0.19)));
+	    paths[2].push(new line(paths[2].cx + 177, paths[2].cy - 8, paths[2].cx + 177, paths[2].cy + 55));
+
+	}
+
+	function assignTextBalls(k) {
+	    
+	    for (var i = 0; i < particles.length; i++) {
+	        particles[i].assignedText = false;
+	        particles[i].animateOpacity = true;
+	        particles[i].originOpacity =0.3;
+	    }
+
+	    var len = 0;
+	    for(var i=0;i<paths[k].length;i++)
+	    {
+	        len += paths[k][i].length;
+	    }
+	    for (var i = 0; i < paths[k].length; i++) {
+	        var bpl = paths[k][i].length * (25/100);
+	        for(var j=0;j<bpl;j++)
+	        {
+	            do {
+	                var p = parseInt(Math.random() * total);
+	            } while (particles[p].assignedText)
+               
+	            particles[p].assignedText = true;
+                
+	            //special
+	            particles[p].vx = 0;
+	            particles[p].vy = 0;
+
+	            if (k == 2)
+	                particles[p].repel = true;
+
+	            particles[p].animateOpacity = true;
+	            particles[p].originOpacity = 1;
+	            particles[p].animationDone = false;
+	            particles[p].originX = 5 * (0.5 - Math.random())+ paths[k][i].getPoint(j / bpl ).x;
+	            particles[p].originY = 5 * (0.5 - Math.random())+ paths[k][i].getPoint(j / bpl ).y;
+	        }
+	    }
+
+
+	    
+	}
+
+	var letters = [{points: [[0, 100], [0, 50], [0, 0], [40, 0], [40, 50], [0, 50]], marginLeft: 0 },
+        { points: [[0, 100], [0, 65], [0, 30], [35, 30], [35, 65], [0, 65], [35, 100]], marginLeft: 60 },
+        { points: [[0, 100], [0, 30], [35, 30], [35, 100], [0, 100]], marginLeft: 115 },
+        { points: [[10, 30], [35, 30], [35, 100], [0, 100]], marginLeft: 170 },
+        { points: [[35, 30], [0, 30], [0, 65], [25, 65], [0, 65], [0, 100], [35, 100]], marginLeft: 225 },
+        { points: [[35, 30], [0, 30], [0, 100], [35, 100]], marginLeft: 280 },
+        { points: [[0, 30], [17, 30], [34, 30], [17, 30], [17, 100]], marginLeft: 335 },
+        { points: [[35, 30], [0, 30], [0, 65], [35, 65], [35, 100], [0, 100]], marginLeft: 390 }];
+
+	var letterParticles = [];
+
+	/*for (var k = 0; k < letters.length; k++) {
+	    //letterParticles.push([]);
+	    for (var i = 0; i < letters[k].points.length; i++) {
+
+
+
+	        letterParticles[k].push(new create_particle(2));
+	        letterParticles[k][i].wave = false;
+	        letterParticles[k][i].pop = false;
+	        letterParticles[k][i].radius = 2;
+	        letterParticles[k][i].x=300 + letters[k].points[i][0] * 0.5 + letters[k].marginLeft * 0.5;
+	        letterParticles[k][i].y = 300 + letters[k].points[i][1] * 0.5
+	        letterParticles[k][i].meanY = letterParticles[k][i].y;
+            
+	    }
+	}*/
+
+	document.title = total;
+
+	function draw()
+	{
+	    ctx.fillStyle = "#2F5168";
+	    ctx.fillRect(0, 0, W, H);
+        ctx.fill()
+        
+	    if(stop && initialDelayDone)
+	    {
+	        if(a[1]>1)
+	        {
+	            a[1]+=(0-a[1])/12;
+	            for(var i=0;i<particles.length;i++)
+	            {
+	                var p=particles[i];
+	                p.meanY+=(H/2-p.meanY)/12;
+	            }
+	        }
+	        else
+	        {
+	            explode();
+	            drawText();
+	            assignTextBalls(0);
+	            setTimeout(function () { explode(); assignTextBalls(1); }, 3000);
+	            setTimeout(explode, 6000);
+	            setTimeout(function () { explode(); assignTextBalls(2); }, 10000);
+	            stop = false;
+
+	        }
+	        increment/=1.001;
+	    }
+
+	    for(var i=0;i<particles.length;i++)
+	    {
+	        var p=particles[i];
+	        p.draw();
+	    }
+
+
+	    /*for (var k = 0; k < letters.length; k++) {
+	        for (var i = 0; i < letters[k].points.length; i++) {
+	            letterParticles[k][i].draw();
+	        }
+	    }*/
+
+	    for(var i=0;i<t.length;i++)
+	        t[i] = (t[i] + increment) % (parseInt(W / 250 + 1) * 10);
+
+	    for (var k = 0; k < letters.length; k++) {
+	        for (var i = 0; i < letters[k].points.length; i++) {
+
+
+	            ctx.beginPath();
+	            ctx.lineWidth = 1;
+	            ctx.strokeStyle = "rgba(255,255,255,0.5)";
+	            ctx.moveTo(300 + letters[k].points[i][0] * 0.5 + letters[k].marginLeft * 0.5, 300 + letters[k].points[i][1] * 0.5);
+                if(i+1<letters[k].points.length)
+                    ctx.lineTo(300 + letters[k].points[i + 1][0] * 0.5 + letters[k].marginLeft * 0.5, 300 + letters[k].points[i + 1][1] * 0.5);
+	            ctx.stroke();
+	            ctx.closePath();
+	        }
+	    }
+
+	}
+
+	var canvasOpacity = 1;
+	
+	function removecanvas() {
+	    canvas.parentNode.removechild(canvas);
+	}
+	
+	var timer =setInterval(draw,spf);
+	
+	setTimeout(function() {initialDelayDone=true},2000);
+	document.body.onload=stoploading;
+</script>
+
+</html>

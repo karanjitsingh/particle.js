@@ -1,0 +1,401 @@
+<!doctype html>
+<html>
+
+<head>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,300' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Roboto:400,100,300' rel='stylesheet' type='text/css'>
+    <style>
+        html, body {
+            height:100%;
+        }
+        body {
+            padding: 0px;
+            margin: 0px;
+            height: 100%;
+            background: #2F5168;
+        }
+
+        @-webkit-keyframes fadeTint {
+            to {
+                opacity: 0;
+            }
+        }
+
+        @-webkit-keyframes slideInCard {
+            from {
+
+                margin-left:50px;
+            }
+            to {
+                opacity:1;
+                margin-left: 100px;
+            }
+        }
+
+        .slideIn {
+            -webkit-animation-name: slideInCard;
+            -webkit-animation-duration: 0.5s;
+            -webkit-animation-timing-function: ease-out;
+            -webkit-animation-fill-mode: forwards;
+            -webkit-animation-play-state: running;
+        }
+
+        #card2 {
+            -webkit-animation-delay: 0.1s;
+        }
+
+        .fadeTintDiv {
+            -webkit-animation-name: fadeTint;
+            -webkit-animation-duration: 0.5s;
+            -webkit-animation-fill-mode: forwards;
+            -webkit-animation-play-state: running;
+        }
+
+
+
+        table{
+            padding:0px;
+            border-spacing:0px;
+        }
+
+        tr,td {
+            border-spacing:0px;
+            padding:0px;
+        }
+
+        ul {
+            list-style: none;
+            margin: 0px 40px 0px 0px;
+        }
+        li {
+            padding:10px;
+        }
+        a {
+            text-decoration:none;
+            font-family:'Open Sans';
+            font-weight:400;
+            font-size:24px;
+            color:#fff;
+        }
+        span.para {
+            font-size: 20px;
+            text-align: justify;
+            width: 395px;
+            padding-left: 5px;
+            line-height: 22px;
+            margin-top: 20px;
+            font-weight: 300;
+            color: #333;
+            font-family: 'Roboto';
+            display: block;
+        }
+        span.heading {
+            display: block;
+            font-family: 'Roboto';
+            font-size: 60px;
+            width: 400px;
+            color: #555;
+            line-height: 60px;
+            font-weight: 100;
+        }
+    </style>
+
+    <script>
+
+    </script>
+</head>
+
+<body>
+<div id="background" style="background: url('./images/bg.png'); background-size:cover;height:100%;width:100%;position:fixed; z-index:-1;"></div>
+<div id="tint" style="background: #2F5168; background-size:cover;height:100%;width:100%;position:fixed; z-index:-1;"></div>
+<table cellpadding="0" cellspacing="0" style="height:100%;width:100%;table-layout:fixed;">
+    <tr>
+        <td valign="top">
+            
+            <div id="card" style="z-index:1;position:relative;padding: 50px; background: #FFF; width: 400px; margin-top: 150px; opacity:0; box-shadow:0px 2px 4px rgba(0,0,0,0.5);">
+                <span class="heading">Hi !</span>
+                <span class="para">I'm Karan Jit Singh, and I am currently studying in Manipal institute of technology. I love computer prograamming and gaming and all sorts of shit. I upload all my projects ( good ones ) on this website. Do check them out.</span>
+            </div>
+            <div id="card2" style="z-index: 1; position: relative; padding: 30px 50px 30px 50px; background: #FFF; width: 400px; margin-top: 0px; opacity: 0; box-shadow: 0px 0px 4px rgba(0,0,0,0.5);">
+                <span class="heading" style="font-size:42px; font-weight:100; text-align:center" >Projects</span>
+            </div>
+
+        </td>
+        <td style="width:250px;" align="right">
+            <ul type="disc">
+                <li><a href="#">Projects</a></li>
+                <li><a href="#">About Me</a></li>
+                <li><a href="#">Contact</a></li>
+            </ul>
+        </td>
+    </tr>
+</table>
+<canvas id=canvas style="margin:0 auto 0 auto; position:absolute;top:0px;z-index:-1"></canvas>
+
+</body>
+
+
+<script>
+	var canvas = document.getElementById("canvas");
+	var W=window.innerWidth;
+	var H=window.innerHeight;
+	var total=(400/1400)*W;
+	var t;
+	canvas.width=W;
+	canvas.height=H;
+	var ctx = canvas.getContext("2d");
+	var t=[0,0];
+	var a=[100,40];
+	var l=[20,1000];
+	var POP_COLORS=["#E04836","#F39D41","#DDDDDD"];
+	var CANVAS_BG="#2F5168";
+	var initialDelayDone = false;
+	var mouseX = undefined;
+	var mouseY = undefined;
+
+	window.onmousemove=function(e){
+	    mouseX = e.clientX;
+	    mouseY = e.clientY;
+	}
+	
+	function $id(obj) {
+		return document.getElementById(obj);
+	}
+	
+	function HEXAtoRGBA(hex,a)
+	{
+		hex=hex.substring(1,7);
+		return "rgba(" + parseInt(hex.substr(0,2),16) +
+			","+parseInt(hex.substr(2,2),16) +
+			","+parseInt(hex.substr(4,2),16) +
+			","+a+")";
+	}
+
+	var w = 2 * Math.PI / 10;
+	var k = 2 * Math.PI;
+
+	var gravity = 0.5;
+
+	Math.sgn = function (x) {
+	    return (x > 0) - (x < 0);
+	}
+
+	function create_particle(i) {
+		this.i=i;
+		this.x=i/total*W;
+		this.y = H * 2 / 3;
+
+		this.meany = this.y;
+
+		this.radius=4;
+		this.opacity = 1;
+
+		this.pop=true;
+		this.radiuslag = 1;
+		this.wave = true;
+
+		this.f = 0.5;
+
+		this.e = 0.6;
+		this.mouseDeflect = true;
+
+		this.vx = 0;
+		this.vy = 0;
+
+		this.fx = 0;
+		this.fy = 0;
+
+		this.disturbed = true;
+
+		this.turned = false;
+
+		this.animate = function () {
+
+		    if (mouseX != undefined && mouseY != undefined && this.mouseDeflect == true) {
+		        var mx = this.x - W/2;
+		        var my = this.y - H/2;
+		        var mx2 = Math.pow(mx, 2);
+		        var my2 = Math.pow(my, 2);
+		        var d = Math.sqrt(mx2 + my2);
+
+		        this.fx = -this.f * mx / d;
+		        this.fy = -this.f * my / d;
+
+                
+		        if (d < 20 && this.disturbed) {
+		            this.vx = this.vx * this.e;
+		            this.vy = this.vy * this.e;
+		            this.fx = 0;
+		            this.fy = 0;
+		            this.disturbed = false;
+
+		        }
+		        else {
+		            this.disturbed = true;
+		        }
+
+		    }
+		    else
+		    {
+		        //this.fy = gravity;
+		        //this.e = 0.6;
+		    }
+
+
+		    this.vx += this.fx;
+		    this.vy += this.fy;
+
+
+		    this.x += this.vx;
+		    this.y += this.vy;
+
+		    
+		}
+
+		this.propagateWave = function() {
+		    var fixed=true;
+		    var y=0;
+		    var x=0;
+		    for(var i=0;i<t.length;i++)
+		    {
+		        y+=a[i]*Math.sin(w*t[i]-k/l[i]*this.x);
+		        x+=a[i]*Math.cos(w*t[i]-k/l[i]*this.x);
+		        fixed=false;
+				
+		    }
+			
+		    this.y=this.meany-y;
+			
+			
+			
+		    if (fixed===true)
+		        this.y=this.meany;
+			
+			
+			
+			
+			
+		    if(this.pop){
+		        if(this.radius<2.001)
+		        {
+		            this.radius+=Math.random()*4;
+		            this.radiuslag=Math.random()*12 + 12;
+		        }
+		        else
+		            this.radius+=(2-this.radius)/this.radiuslag;
+		    }
+			
+		    if(x<0)
+		        this.opacity+=(0.3-this.opacity)/12;
+		    else
+		        this.opacity=1;
+		}
+
+		this.draw= function(){
+			
+		    if (this.wave == false)
+		        this.animate();
+		    else
+		        this.propagateWave();
+
+			
+			ctx.beginPath();
+			ctx.fillStyle=HEXAtoRGBA(POP_COLORS[this.i%3],this.opacity);
+			ctx.arc(this.x,this.y,this.radius,Math.PI*2,false);
+			ctx.fill();
+			
+		};
+	}
+	
+	var particles=[];
+	
+	for(var i=0;i<total;i++)
+	{
+		particles.push(new create_particle(i));
+	}
+		
+	var stop=false;
+	var spf=30;
+	var increment=0.1;
+		
+	function stoploading() {
+		stop=true;
+	}
+	
+	var amp = 10;
+
+	function explode() {
+	    for (var i=0; i < particles.length; i++) {
+	        var p = particles[i];
+	        p.wave = false;
+	        //p.vx = (0.5 - Math.random()) * 20;
+	        //p.vy = (0.5 - Math.random()) * 20;
+	    }
+	}
+
+	function draw()
+	{
+		ctx.fillStyle=CANVAS_BG;
+		ctx.fillRect(0,0,W,H);
+		if(stop && initialDelayDone)
+		{
+			if(a[1]>1)
+			{
+				a[1]+=(0-a[1])/12;
+				for(var i=0;i<particles.length;i++)
+				{
+					var p=particles[i];
+					p.meany+=(H/2-p.meany)/12;
+				}
+			}
+			else
+			{
+			    explode();
+			    stop = false;
+			    $id("card").className = "slideIn";
+			    $id("card2").className = "slideIn";
+				/*if (particles[0].radius<0.001)
+				{
+					clearInterval(timer);
+					ctx.fillStyle=CANVAS_BG;
+					ctx.fillRect(0,0,W,H);
+					document.title="done";
+				    //$id("tint").className = "fadeTintDiv";
+					$id("card").className = "slideIn";
+					$id("card2").className = "slideIn";
+					//removeCanvas();
+					return;
+				}*/
+			  
+				/*for(var i=0;i<particles.length;i++)
+				{
+					var p=particles[i];
+					p.pop=false;
+					p.radius+=(0-p.radius)/3.5;
+				}*/
+			}
+			increment/=1.001;
+		}
+	
+		for(var i=0;i<particles.length;i++)
+		{
+			var p=particles[i];
+			p.draw();
+		}
+		for(var i=0;i<t.length;i++)
+			t[i]=(t[i]+increment)%(parseInt(W/250+ 1)*10);
+			
+		
+	}var canvasOpacity=1;
+	
+	function removeCanvas() {
+	    canvas.parentNode.removeChild(canvas);
+	}
+	
+	var timer =setInterval(draw,spf);
+	
+	setTimeout(function() {initialDelayDone=true},2000);
+	document.body.onload=stoploading;
+</script>
+
+</html>

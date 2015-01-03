@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+
+<head>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,300' rel='stylesheet' type='text/css'>
+    <style>
+        body {
+            padding:0px;
+            margin:0px;
+            overflow:hidden;
+        }
+
+        div {
+            overflow:scroll;
+        }
+        div div {
+            overflow:hidden;
+        }
+    </style>
+</head>
+
+<body>
+
+<div id=codes style="position:absolute; background:#f5f5f5; font-family:Consolas; box-sizing:border-box; padding:10px; outline:none; right:0; height:100%; width:100%;" contenteditable="true"> </div>
+
+</body>
+
+
+<script>
+    var a = [1, 2, 3, 4, 5];
+    a.x = 5;
+    a.y = 4;
+
+    document.onclick = function () {
+        var codes = document.getElementById("codes");
+        var c = codes.innerText;
+        c = c.split("\n");
+
+        for(var i=0;i<c.length;i++)
+        {
+            c[i]= "paths.push(" +  c[i] + ");";
+
+        }
+        c = c.join("<br />");
+
+        codes.innerHTML = c;
+    };
+</script>
+
+</html>
