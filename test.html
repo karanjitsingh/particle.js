@@ -1,0 +1,118 @@
+<!doctype html>
+<html>
+
+<head>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,300' rel='stylesheet' type='text/css'>
+    <style>
+        body {
+            padding:0px;
+            margin:0px;
+            overflow:hidden;
+        }
+
+        div:hover {
+            right:0px !important;
+        }
+        div {
+            right:-550px;
+            overflow:scroll;
+        }
+        div div {
+            overflow:hidden;
+        }
+    </style>
+</head>
+
+<body>
+
+<canvas id=canvas style="left:0px; position:absolute;top:0px;z-index:-1"></canvas>
+<div id=codes style="position:absolute; background:#f5f5f5; font-family:Consolas; box-sizing:border-box; padding:10px; outline:none; right:-550px;" contenteditable="true"> </div>
+
+</body>
+
+
+<script>
+    var canvas = document.getElementById("canvas");
+    var code = document.getElementById("codes");
+	var W=window.innerWidth;
+	var H = window.innerHeight;
+	code.style.width = (600) + "px";
+	code.style.height = H + "px";
+	var total=(400/1400)*W;
+	var t;
+	canvas.width=W -50;
+	canvas.height=H;
+	var ctx = canvas.getContext("2d");
+
+	var cx = W / 2;
+	var cy = H / 2;
+
+	function line(x1,y1,x2,y2) {
+	    ctx.moveTo(x1, y1);
+	    ctx.lineTo(x2, y2);
+	}
+
+	function circle(x, y, r) {
+	    ctx.arc(x,y,r,Math.PI*2,false)
+	}
+
+	function arc(x, y, r, sa, ea) {
+	    ctx.arc(x, y, r, sa, ea, false);
+	}
+
+	function ellipse(centerX, centerY, width, height) {
+
+	    ctx.moveTo(centerX, centerY - height / 2); // A1
+
+	    ctx.bezierCurveTo(
+          centerX + width / 2, centerY - height / 2, // C1
+          centerX + width / 2, centerY + height / 2, // C2
+          centerX, centerY + height / 2); // A2
+
+	    ctx.bezierCurveTo(
+          centerX - width / 2, centerY + height / 2, // C3
+          centerX - width / 2, centerY - height / 2, // C4
+          centerX, centerY - height / 2); // A1
+
+	}
+
+	function drawText(text,x,y) {
+	    ctx.fillText(text,x,y);
+	}
+
+	function exec(text) {
+	    try {
+	        eval(text);
+	    }
+	    catch (err) {
+	    }
+	}
+
+	var lines = [],circles=[];
+
+	function draw() {
+	    ctx.fillStyle = "#fff";
+	    ctx.fillRect(0, 0, W, H);
+	    ctx.fillStyle = "#000";
+	    ctx.font = "normal 100 146px Open Sans";
+
+	    ctx.lineWidth = 2;
+	    ctx.strokeStyle = "#ff0000";
+        
+	    var code = document.getElementById("codes").innerText;
+	    code = code.split("\n");
+
+	    for (var i = 0; i < code.length; i++)
+	    {
+	        ctx.beginPath();
+	        exec(code[i]);
+	        ctx.stroke();
+	    }
+
+	}
+
+
+	setInterval(draw, 30);
+</script>
+
+</html>
