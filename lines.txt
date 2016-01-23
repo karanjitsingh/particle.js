@@ -80,3 +80,9 @@ line( cx + 177, cy - 8, cx + 177, cy + 55)
 
 ctx.fillStyle="#00ff00";
 ctx.fillRect(W/2-5,H/2-5,10,10);
+
+var img = new Image();
+img.onload = function() {
+    ctx.drawImage(img, 0, 0);
+}
+img.src = "http://upload.wikimedia.org/wikipedia/commons/d/d2/Svg_example_square.svg";

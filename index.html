@@ -154,8 +154,8 @@
     paths[0].cy = H / 2;
     paths[1].cx = W / 2;
     paths[1].cy = H / 2;
-    paths[2].cx = 300;
-    paths[2].cy = 200;
+    paths[2].cx = 400;
+    paths[2].cy = 500;
 
     window.onmousemove = function(e) {
         mouseX = e.clientX;
@@ -615,6 +615,24 @@
         paths[1].push(new arc(paths[1].cx + 268, paths[1].cy + 9, 30, -Math.PI * (0.91), -Math.PI * (0.19)));
         paths[1].push(new line(paths[1].cx + 293, paths[1].cy - 8, paths[1].cx + 293, paths[1].cy + 55));
 
+
+
+paths[2].push(new arc(paths[2].cx - 359,paths[2].cy -105,35,Math.PI*0.81,-Math.PI * 0.57));
+paths[2].push(new line(paths[2].cx - 370,paths[2].cy-139, paths[2].cx -250,paths[2].cy-149));
+paths[2].push(new line(paths[2].cx -250,paths[2].cy-149,paths[2].cx-227,paths[2].cy-111));
+paths[2].push(new arc(paths[2].cx+190,paths[2].cy+672,886,Math.PI*-0.6561,-1.6903));
+paths[2].push(new arc(paths[2].cx+130,paths[2].cy+153.4,364,-0.54*Math.PI,0));
+paths[2].push(new arc(paths[2].cx+304.8,paths[2].cy-58.4,89,Math.PI*-0.26,Math.PI * 0.234));
+paths[2].push(new line(paths[2].cx-388,paths[2].cy-86,paths[2].cx-350,paths[2].cy-28));
+paths[2].push(new line(paths[2].cx-350,paths[2].cy-28,paths[2].cx-372,paths[2].cy-7.5));
+paths[2].push(new line(paths[2].cx-372,paths[2].cy-7.5,paths[2].cx-347,paths[2].cy+19));
+paths[2].push(new arc(paths[2].cx-371,paths[2].cy+34.1,12,Math.PI,-Math.PI));
+
+paths[2].push(new arc(paths[2].cx+4.6,paths[2].cy+168,11,Math.PI,-Math.PI));
+
+paths[2].push(new arc(paths[2].cx+91.1,paths[2].cy+160.8,11,Math.PI,-Math.PI));
+paths[2].push(new arc(paths[2].cx+177.6,paths[2].cy+153.8,11,Math.PI,-Math.PI))
+;        /*
         paths[2].push(new line(paths[2].cx - 172, paths[2].cy - 50, paths[2].cx - 172, paths[2].cy + 55));
         paths[2].push(new line(paths[2].cx - 172, paths[2].cy + 11.5, paths[2].cx - 110.5, paths[2].cy - 50));
         paths[2].push(new line(paths[2].cx - 155, paths[2].cy - 6, paths[2].cx - 110.5, paths[2].cy + 55));
@@ -632,7 +650,7 @@
         paths[2].push(new arc(paths[2].cx + 60, paths[2].cy + 21, 31, Math.PI * (0.05), Math.PI * 0.5));
         paths[2].push(new line(paths[2].cx + 122, paths[2].cy - 23, paths[2].cx + 122, paths[2].cy + 55));
         paths[2].push(new arc(paths[2].cx + 152, paths[2].cy + 9, 30, -Math.PI * (0.91), -Math.PI * (0.19)));
-        paths[2].push(new line(paths[2].cx + 177, paths[2].cy - 8, paths[2].cx + 177, paths[2].cy + 55));
+        paths[2].push(new line(paths[2].cx + 177, paths[2].cy - 8, paths[2].cx + 177, paths[2].cy + 55));*/
 
     }
 
@@ -671,6 +689,7 @@
                 particles[p].animationDone = false;
                 particles[p].originX = 5 * (0.5 - Math.random()) + paths[k][i].getPoint(j / bpl).x;
                 particles[p].originY = 5 * (0.5 - Math.random()) + paths[k][i].getPoint(j / bpl).y;
+                console.log(j/bpl);
             }
         }
     }

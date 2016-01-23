@@ -83,6 +83,16 @@ function line(x1, y1, x2, y2) {
     };
 }
 
+function bezier(x,y,px1,py1,px2,py2) {
+    this.x = x;
+    this.y = y;
+    this.px1 = px1;
+    this.py1 = py1;
+    this.px2 = px2;
+    this.py2 = py2;
+
+}
+
 function circle(x, y, r) {
     this.x = x;
     this.y = y;
