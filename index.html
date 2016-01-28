@@ -2,8 +2,6 @@
 <html>
 
 <head>
-    <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,300' rel='stylesheet' type='text/css'>
-    <link href='http://fonts.googleapis.com/css?family=Roboto:400,100,300' rel='stylesheet' type='text/css'>
     <style>
         html, body {
             height: 100%;
@@ -120,8 +118,7 @@
     var canvas = document.getElementById("canvas");
     var W = window.innerWidth;
     var H = window.innerHeight;
-    var total = (400 / 1400) * W;
-    total = total < 450 ? 450 : total;
+    var total = 1500;
     var t;
     canvas.width = W;
     canvas.height = H;
@@ -154,8 +151,8 @@
     paths[0].cy = H / 2;
     paths[1].cx = W / 2;
     paths[1].cy = H / 2;
-    paths[2].cx = 400;
-    paths[2].cy = 500;
+    paths[2].cx = W/2;
+    paths[2].cy = H/2;
 
     window.onmousemove = function(e) {
         mouseX = e.clientX;
@@ -184,136 +181,6 @@
         particles.push(new create_particle(i));
     }
 
-    var words = [[{ points: [[0, 100], [0, 50], [0, 0], [40, 0], [40, 50], [0, 50]], marginLeft: 0 },
-        { points: [[0, 100], [0, 65], [0, 30], [35, 30], [35, 65], [0, 65], [35, 100]], marginLeft: 60 },
-        { points: [[0, 100], [0, 30], [35, 30], [35, 100], [0, 100]], marginLeft: 115 },
-        { points: [[10, 30], [35, 30], [35, 100], [0, 100]], marginLeft: 170 },
-        { points: [[35, 30], [0, 30], [0, 65], [25, 65], [0, 65], [0, 100], [35, 100]], marginLeft: 225 },
-        { points: [[35, 30], [0, 30], [0, 100], [35, 100]], marginLeft: 280 },
-        { points: [[0, 30], [17, 30], [34, 30], [17, 30], [17, 100]], marginLeft: 335 },
-        { points: [[35, 30], [0, 30], [0, 65], [35, 65], [35, 100], [0, 100]], marginLeft: 390 },
-
-        { points: [[40, 0], [0, 0], [0, 100], [40, 100]], marginLeft: 0 + 540 },
-	    { points: [[0, 100], [0, 30], [35, 30], [35, 100], [0, 100]], marginLeft: 60 + 540 },
-	    { points: [[0, 100], [0, 30], [35, 100], [35, 30]], marginLeft: 115 + 540 },
-    	{ points: [[0, 30], [17, 30], [34, 30], [17, 30], [17, 100]], marginLeft: 170 + 540 },
-	    { points: [[0, 100], [0, 65], [0, 30], [35, 30], [35, 65], [0, 65], [35, 65], [35, 100]], marginLeft: 225 + 540 },
-	    { points: [[35, 30], [0, 30], [0, 100], [35, 100]], marginLeft: 280 + 540 },
-    	{ points: [[0, 30], [17, 30], [34, 30], [17, 30], [17, 100]], marginLeft: 335 + 540 },
-
-        { points: [[0, 100], [0, 50], [0, 0], [40, 0], [40, 50], [0, 50], [40, 50], [40, 100]], marginLeft: 0 + 1025 },
-	    { points: [[0, 65], [0, 30], [35, 30], [35, 65], [35, 100], [0, 100], [0, 65], [35, 65]], marginLeft: 60 + 1025 },
-	    { points: [[0, 100], [0, 30], [35, 30], [35, 100], [0, 100]], marginLeft: 115 + 1025 },
-	    { points: [[0, 30], [0, 100], [35, 100], [35, 30]], marginLeft: 170 + 1025 },
-	    { points: [[0, 30], [17, 30], [34, 30], [17, 30], [17, 100]], marginLeft: 225 + 1025 }]];
-
-    function rect(x1, y1, w, h, i) {
-        var margin = 10;
-        i = i == 2 ? 3 : i;
-        this.i = i;
-        this.opacity = 0;
-        this.bounds = { x: x1 - margin, y: y1 - margin, width: w + 2 * margin, height: h + 2 * margin, x2: x1 + w + margin, y2: y1 + h + margin };
-
-        var originOpacity = 0;
-
-        this.drawing = false;
-        this.draw = function () {
-
-            ctx.save();
-
-            ctx.shadowOffsetX = 0;
-            ctx.shadowOffsetY = 0;
-            ctx.shadowBlur = 5;
-            //ctx.shadowColor = HEXAtoRGBA(POP_COLORS[i], this.opacity);
-            ctx.strokeStyle = HEXAtoRGBA(POP_COLORS[i], this.opacity);
-            ctx.lineWidth = 2;
-            ctx.strokeRect(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);
-            //ctx.fillStyle = "rgba(0,0,0," + (this.opacity * 0.2) + ")";
-
-            ctx.fillStyle = HEXAtoRGBA(POP_COLORS[this.i], this.opacity * 0.5);
-
-            if (this.drawing) {
-                ctx.fillRect(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);
-                originOpacity = 1;
-                if (Math.abs(this.opacity - originOpacity) > 0.01)
-                    this.opacity += (originOpacity - this.opacity) / 6;
-            }
-            else {
-                ctx.fillRect(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);
-                originOpacity = 0;
-                if (Math.abs(this.opacity - originOpacity) > 0.01)
-                    this.opacity += (originOpacity - this.opacity) / 6;
-            }
-
-
-            ctx.restore();
-
-
-            ctx.beginPath();
-            ctx.fillStyle = HEXAtoRGBA(POP_COLORS[2], this.opacity);
-            ctx.arc(this.bounds.x, this.bounds.y, 2, Math.PI * 2, false);
-            ctx.fill();
-            ctx.closePath();
-            ctx.beginPath();
-            ctx.arc(this.bounds.x2, this.bounds.y, 2, Math.PI * 2, false);
-            ctx.fill();
-            ctx.closePath();
-            ctx.beginPath();
-            ctx.arc(this.bounds.x2, this.bounds.y2, 2, Math.PI * 2, false);
-            ctx.fill();
-            ctx.closePath();
-            ctx.beginPath();
-            ctx.arc(this.bounds.x, this.bounds.y2, 2, Math.PI * 2, false);
-            ctx.fill();
-            ctx.closePath();
-
-
-
-        };
-    }
-
-    var wordRects = [];
-    var wordParticles = [];
-
-    function initMenuText() {
-        for (var n = 0; n < words.length; n++) {
-            wordParticles.push(new Array());
-            for (var j = 0; j < words[n].length; j++) {
-                wordParticles[n].push(new Array());
-
-                for (var i = 0; i < words[n][j].points.length; i++) {
-
-                    var p = new create_particle(2);
-                    wordParticles[n][j].push(p);
-                    p.wave = false;
-                    p.pop = false;
-                    p.repel = true;
-                    p.animationDone = true;
-                    p.assignedText = true;
-                    p.radius = 2;
-                    p.maxRepelDistance = 30;
-                    p.forceFactor = 10;
-                    p.animateOpacity = true;
-                    p.originOpacity = 1;
-                    p.opacity = 0;
-
-                    p.x = (words[n][j].points[i][0] + words[n][j].marginLeft - (words[n][words[n].length - 1].marginLeft + 35) / 2) / 2.2 + W / 2;
-                    p.y = (words[n][j].points[i][1] - 50) / 2.2 + H - 100;
-                    p.originX = (words[n][j].points[i][0] + words[n][j].marginLeft - (words[n][words[n].length - 1].marginLeft + 35) / 2) / 2 + W / 2 + (0.5 - Math.random()) * 4;
-                    p.originY = (words[n][j].points[i][1] - 50) / 2 + H - 100 + (0.5 - Math.random()) * 4;
-
-
-                }
-            }
-        }
-
-        wordRects = [new rect((0 - (words[words.length - 1][words[words.length - 1].length - 1].marginLeft + 35) / 2) / 2 + W / 2, H - 125, 435 / 2, 50, 0),
-	                    new rect((540 + 0 - (words[words.length - 1][words[words.length - 1].length - 1].marginLeft + 35) / 2) / 2 + W / 2, H - 125, 370 / 2, 50, 1),
-	                    new rect((1025 + 0 - (words[words.length - 1][words[words.length - 1].length - 1].marginLeft + 35) / 2) / 2 + W / 2, H - 125, 260 / 2, 50, 2)];
-
-
-        initEvents();
-    }
 
     function create_particle(i) {
         this.i = i;
@@ -327,7 +194,6 @@
 
         this.pop = true;
         this.radiusLag = 1;
-        this.wave = true;
 
         this.e = 0.8;
 
@@ -381,30 +247,6 @@
                     this.vy = -1 * this.vy;
             }
 
-        }
-
-        this.propagateWave = function () {
-            var fixed = true;
-            var y = 0;
-            var x = 0;
-            for (var i = 0; i < t.length; i++) {
-                y += a[i] * Math.sin(w * t[i] - k / l[i] * this.x);
-                x += a[i] * Math.cos(w * t[i] - k / l[i] * this.x);
-                fixed = false;
-
-            }
-
-            this.y = this.meanY - y;
-
-
-
-            if (fixed === true)
-                this.y = this.meanY;
-
-            if (x < 0)
-                this.opacity += (0.3 - this.opacity) / 1.1;
-            else
-                this.opacity = 1;
         }
 
         this.animateMouseRepel = function () {
@@ -465,10 +307,8 @@
 
         this.draw = function () {
 
-            if (this.wave == false)
                 this.animate();
-            else
-                this.propagateWave();
+
             if (this.pop) {
                 if (this.radius < 2.001) {
                     this.radius += Math.random() * 4;
@@ -519,25 +359,20 @@
         };
     }
 
-    function stoploading() {
-        stop = true;
-    }
-
     function explode() {
         for (var i = 0; i < particles.length; i++) {
             var p = particles[i];
-            p.wave = false;
             p.assignedText = false;
-            p.vx = (0.5 - Math.random()) * 20;
-            p.vy = (0.5 - Math.random()) * 20;
+            p.vx = (0.5 - Math.random()) * 50;
+            p.vy = (0.5 - Math.random()) * 50;
         }
     }
 
     function line(x1, y1, x2, y2) {
-        this.x1 = x1;
-        this.x2 = x2;
-        this.y1 = y1;
-        this.y2 = y2;
+        this.x1 = x1 < x2?x1:x2;
+        this.x2 = x1 < x2?x2:x1;
+        this.y1 = x1 < x2?y1:y2;
+        this.y2 = x1 < x2?y2:y1;
         if (this.x1 - this.x2 != 0)
             this.theta = Math.atan((this.y1 - this.y2) / (this.x1 - this.x2));
         else
@@ -573,85 +408,95 @@
         this.sa = sa;
         this.ea = ea;
         this.theta = this.ea - this.sa;
-        this.length = this.theta * r;
+        if(this.theta<0)
+            this.theta = (2 * Math.PI + this.theta);
+
+        //else
+            this.length = this.theta * r;
 
         this.getPoint = function (n) {
             return { x: this.x + r * Math.cos(this.sa + n * this.theta), y: this.y + r * Math.sin(this.sa + n * this.theta) };
         };
     }
 
+    function ellipseArc(x,y,w,h,sa,ea) {
+        this.x = x;
+        this.y = y;
+        this.w = w;
+        this.h = h;
+
+        this.sa = sa;
+        this.ea = ea;
+        this.theta = this.ea - this.sa;
+
+        if(this.theta<0)
+            this.theta = (2 * Math.PI + this.theta);
+        //else
+            this.length = Math.atan(this.w/this.h * Math.tan(this.theta));
+
+            /*console.log(this.w);
+            console.log(this.h);
+            console.log(Math.atan(this.w/this.h * Math.tan(this.sa)));
+            console.log(Math.atan(this.w/this.h * Math.tan(this.ea)));*/
+
+
+
+            this.length =( 1.111 * (Math.sqrt(
+                    Math.pow(  this.w/2 * (Math.cos(this.sa) - Math.cos(this.ea) ),2) + 
+                    Math.pow(   this.h/2 *  (Math.sin(this.sa) - Math.sin(this.ea)),2  )
+                    )));
+
+        this.getPoint = function (n) {
+            return { x: this.x + this.w/2 * Math.cos(this.sa + n * this.theta), y: this.y + this.h/2 * Math.sin(this.sa + n * this.theta) };
+        };
+    }
+
     function drawText() {
-        paths[0].push(new line(paths[0].cx - 49.5, paths[0].cy - 50, paths[0].cx - 49.5, paths[0].cy + 55));
-        paths[0].push(new line(paths[0].cx - 49.5, paths[0].cy, paths[0].cx + 70 - 51.5, paths[0].cy));
-        paths[0].push(new line(paths[0].cx + 70 - 51.5, paths[0].cy - 50, paths[0].cx + 70 - 51.5, paths[0].cy + 55));
-        paths[0].push(new line(paths[0].cx + 100 - 46.5, paths[0].cy - 23, paths[0].cx + 100 - 46.5, paths[0].cy + 55));
-        paths[0].push(new circle(paths[0].cx + 100 - 46.5, paths[0].cy - 45, 4));
-
-        paths[1].push(new line(paths[1].cx - 287.5, paths[1].cy - 50, paths[1].cx - 287.5, paths[1].cy + 55));
-        paths[1].push(new line(paths[1].cx - 258, paths[1].cy - 50, paths[1].cx - 255.5, paths[1].cy - 11));
-        paths[1].push(new line(paths[1].cx - 255.5, paths[1].cy - 11, paths[1].cx - 253, paths[1].cy - 50));
-        paths[1].push(new line(paths[1].cx - 258, paths[1].cy - 50, paths[1].cx - 253, paths[1].cy - 50));
-        paths[1].push(new line(paths[1].cx - 224.5, paths[1].cy - 23, paths[1].cx - 224.5, paths[1].cy + 55));
-        paths[1].push(new line(paths[1].cx - 176, paths[1].cy, paths[1].cx - 176, paths[1].cy + 55));
-        paths[1].push(new arc(paths[1].cx - 200.25, paths[1].cy + 3, 24.5, -Math.PI * (1), 0));
-        paths[1].push(new line(paths[1].cx - 127.5, paths[1].cy, paths[1].cx - 127.5, paths[1].cy + 55));
-        paths[1].push(new arc(paths[1].cx - 151.75, paths[1].cy + 3, 24.5, -Math.PI * (1), 0));
-        paths[1].push(new line(paths[1].cx - 56, paths[1].cy - 50, paths[1].cx - 56, paths[1].cy + 55));
-        paths[1].push(new line(paths[1].cx - 56, paths[1].cy + 11.5, paths[1].cx + 5.5, paths[1].cy - 50));
-        paths[1].push(new line(paths[1].cx - 39, paths[1].cy - 6, paths[1].cx + 5.5, paths[1].cy + 55));
-        paths[1].push(new arc(paths[1].cx + 45, paths[1].cy + 10, 32, -Math.PI * (0.71), -Math.PI * 0.18));
-        paths[1].push(new arc(paths[1].cx + 72, paths[1].cy + 377, 365, -Math.PI * (0.527), -Math.PI * 0.5));
-        paths[1].push(new arc(paths[1].cx + 41, paths[1].cy + 33, 19, -Math.PI * (1.5), -Math.PI * 0.5));
-        paths[1].push(new arc(paths[1].cx + 41, paths[1].cy + 21, 31, Math.PI * (0.05), Math.PI * 0.5));
-        paths[1].push(new line(paths[1].cx + 72, paths[1].cy - 8, paths[1].cx + 72, paths[1].cy + 55));
-        paths[1].push(new line(paths[1].cx + 104.5, paths[1].cy - 23, paths[1].cx + 104.5, paths[1].cy + 55));
-        paths[1].push(new arc(paths[1].cx + 135, paths[1].cy + 10, 32, -Math.PI * (0.87), -Math.PI * 0.44));
-        paths[1].push(new line(paths[1].cx + 207, paths[1].cy - 8, paths[1].cx + 207, paths[1].cy + 55));
-        paths[1].push(new arc(paths[1].cx + 180, paths[1].cy + 10, 32, -Math.PI * (0.71), -Math.PI * 0.18));
-        paths[1].push(new arc(paths[1].cx + 207, paths[1].cy + 377, 365, -Math.PI * (0.527), -Math.PI * 0.5));
-        paths[1].push(new arc(paths[1].cx + 176, paths[1].cy + 33, 19, -Math.PI * (1.5), -Math.PI * 0.5));
-        paths[1].push(new arc(paths[1].cx + 176, paths[1].cy + 21, 31, Math.PI * (0.05), Math.PI * 0.5));
-        paths[1].push(new line(paths[1].cx + 238, paths[1].cy - 23, paths[1].cx + 238, paths[1].cy + 55));
-        paths[1].push(new arc(paths[1].cx + 268, paths[1].cy + 9, 30, -Math.PI * (0.91), -Math.PI * (0.19)));
-        paths[1].push(new line(paths[1].cx + 293, paths[1].cy - 8, paths[1].cx + 293, paths[1].cy + 55));
-
-
-
 paths[2].push(new arc(paths[2].cx - 359,paths[2].cy -105,35,Math.PI*0.81,-Math.PI * 0.57));
 paths[2].push(new line(paths[2].cx - 370,paths[2].cy-139, paths[2].cx -250,paths[2].cy-149));
 paths[2].push(new line(paths[2].cx -250,paths[2].cy-149,paths[2].cx-227,paths[2].cy-111));
 paths[2].push(new arc(paths[2].cx+190,paths[2].cy+672,886,Math.PI*-0.6561,-1.6903));
-paths[2].push(new arc(paths[2].cx+130,paths[2].cy+153.4,364,-0.54*Math.PI,0));
+paths[2].push(new arc(paths[2].cx+130,paths[2].cy+153.4,364,-0.54*Math.PI,-0.8657));
 paths[2].push(new arc(paths[2].cx+304.8,paths[2].cy-58.4,89,Math.PI*-0.26,Math.PI * 0.234));
 paths[2].push(new line(paths[2].cx-388,paths[2].cy-86,paths[2].cx-350,paths[2].cy-28));
 paths[2].push(new line(paths[2].cx-350,paths[2].cy-28,paths[2].cx-372,paths[2].cy-7.5));
 paths[2].push(new line(paths[2].cx-372,paths[2].cy-7.5,paths[2].cx-347,paths[2].cy+19));
-paths[2].push(new arc(paths[2].cx-371,paths[2].cy+34.1,12,Math.PI,-Math.PI));
+paths[2].push(new line(paths[2].cx-347,paths[2].cy+19,paths[2].cx -372.7,paths[2].cy+23.2));
+paths[2].push(new arc(paths[2].cx-373,paths[2].cy+34.3,11,Math.PI*0.4,Math.PI *1.5));
+paths[2].push(new line(paths[2].cx -369.7,paths[2].cy+45,paths[2].cx-343,paths[2].cy+40));
+paths[2].push(new line(paths[2].cx -359,paths[2].cy+68,paths[2].cx-343,paths[2].cy+40));
+paths[2].push(new line(paths[2].cx -335.4,paths[2].cy+76,paths[2].cx -359,paths[2].cy+68));
+paths[2].push(new arc(paths[2].cx+4.6,paths[2].cy+168,11,-Math.PI,Math.PI));
+paths[2].push(new arc(paths[2].cx+91.1,paths[2].cy+160.8,11,-Math.PI,Math.PI));
+paths[2].push(new arc(paths[2].cx+177.6,paths[2].cy+153.8,11,-Math.PI,Math.PI));
+paths[2].push(new arc(paths[2].cx -304.4,paths[2].cy+106,43, Math.PI*1.14, Math.PI*1.238));
+paths[2].push(new line(paths[2].cx-343.4,paths[2].cy+87.7,paths[2].cx-368,paths[2].cy+139));
+paths[2].push(new arc(paths[2].cx -334,paths[2].cy+154,37 , Math.PI*0.5, Math.PI*1.136));
+paths[2].push(new line(paths[2].cx-333,paths[2].cy+191,paths[2].cx-228.8,paths[2].cy+181));
+paths[2].push(new arc(paths[2].cx-228,paths[2].cy+172,9,0.3,Math.PI*0.5));
+paths[2].push(new arc(paths[2].cx-224,paths[2].cy+139,18,-Math.PI*0.27,0.5));
+paths[2].push(new line(paths[2].cx-231,paths[2].cy+109,paths[2].cx-211,paths[2].cy+126));
+paths[2].push(new line(paths[2].cx-219.3,paths[2].cy+174.7,paths[2].cx-208.2,paths[2].cy+147.8));
+paths[2].push(new arc(paths[2].cx+0,paths[2].cy-563,711,Math.PI*0.5334, Math.PI*0.604));
+paths[2].push(new arc(paths[2].cx-2,paths[2].cy+169.5,38,Math.PI*0.44, Math.PI*0.79));
+paths[2].push(new line(paths[2].cx-32,paths[2].cy+192.7,paths[2].cx-74,paths[2].cy+143.4));
+paths[2].push(new arc(paths[2].cx+183,paths[2].cy+144,40,0.46,Math.PI*0.48));
+paths[2].push(new line(paths[2].cx+6,paths[2].cy+206.8,paths[2].cx+185,paths[2].cy+184));
+paths[2].push(new arc(paths[2].cx+289,paths[2].cy+149,57,Math.PI*1.15,Math.PI *1.31));
+paths[2].push(new arc(paths[2].cx+170,paths[2].cy-119.4,234.2,0.539,1.08));
+paths[2].push(new line(paths[2].cx+218.6,paths[2].cy+161.9,paths[2].cx+238.4,paths[2].cy+123));
+paths[2].push(new line(paths[2].cx+257.2,paths[2].cy+101.6,paths[2].cx+280,paths[2].cy+87.3));
 
-paths[2].push(new arc(paths[2].cx+4.6,paths[2].cy+168,11,Math.PI,-Math.PI));
 
-paths[2].push(new arc(paths[2].cx+91.1,paths[2].cy+160.8,11,Math.PI,-Math.PI));
-paths[2].push(new arc(paths[2].cx+177.6,paths[2].cy+153.8,11,Math.PI,-Math.PI))
-;        /*
-        paths[2].push(new line(paths[2].cx - 172, paths[2].cy - 50, paths[2].cx - 172, paths[2].cy + 55));
-        paths[2].push(new line(paths[2].cx - 172, paths[2].cy + 11.5, paths[2].cx - 110.5, paths[2].cy - 50));
-        paths[2].push(new line(paths[2].cx - 155, paths[2].cy - 6, paths[2].cx - 110.5, paths[2].cy + 55));
-        paths[2].push(new arc(paths[2].cx - 71, paths[2].cy + 10, 32, -Math.PI * (0.71), -Math.PI * 0.18));
-        paths[2].push(new arc(paths[2].cx - 44, paths[2].cy + 377, 365, -Math.PI * (0.527), -Math.PI * 0.5));
-        paths[2].push(new arc(paths[2].cx - 75, paths[2].cy + 33, 19, -Math.PI * (1.5), -Math.PI * 0.5));
-        paths[2].push(new arc(paths[2].cx - 75, paths[2].cy + 21, 31, Math.PI * (0.05), Math.PI * 0.5));
-        paths[2].push(new line(paths[2].cx - 44, paths[2].cy - 8, paths[2].cx - 44, paths[2].cy + 55));
-        paths[2].push(new line(paths[2].cx - 11.5, paths[2].cy - 23, paths[2].cx - 11.5, paths[2].cy + 55));
-        paths[2].push(new arc(paths[2].cx + 19, paths[2].cy + 10, 32, -Math.PI * (0.87), -Math.PI * 0.44));
-        paths[2].push(new line(paths[2].cx + 91, paths[2].cy - 8, paths[2].cx + 91, paths[2].cy + 55));
-        paths[2].push(new arc(paths[2].cx + 64, paths[2].cy + 10, 32, -Math.PI * (0.71), -Math.PI * 0.18));
-        paths[2].push(new arc(paths[2].cx + 91, paths[2].cy + 377, 365, -Math.PI * (0.527), -Math.PI * 0.5));
-        paths[2].push(new arc(paths[2].cx + 60, paths[2].cy + 33, 19, -Math.PI * (1.5), -Math.PI * 0.5));
-        paths[2].push(new arc(paths[2].cx + 60, paths[2].cy + 21, 31, Math.PI * (0.05), Math.PI * 0.5));
-        paths[2].push(new line(paths[2].cx + 122, paths[2].cy - 23, paths[2].cx + 122, paths[2].cy + 55));
-        paths[2].push(new arc(paths[2].cx + 152, paths[2].cy + 9, 30, -Math.PI * (0.91), -Math.PI * (0.19)));
-        paths[2].push(new line(paths[2].cx + 177, paths[2].cy - 8, paths[2].cx + 177, paths[2].cy + 55));*/
+paths[2].push(new ellipseArc(paths[2].cx+256.5,paths[2].cy-28.5,331,160,4.6,-0.75));
+paths[2].push(new ellipseArc(paths[2].cx+202,paths[2].cy-47.5,377,206,4.6,-0.36));
+paths[2].push(new ellipseArc(paths[2].cx+290,paths[2].cy+222,1514,752,3.737,-1.715));
+paths[2].push(new ellipseArc(paths[2].cx+320,paths[2].cy+389,2006,997,3.999,-1.653));
 
+paths[2].push(new ellipseArc(paths[2].cx+90,paths[2].cy-92,597,250,0.26,1.07));
+paths[2].push(new ellipseArc(paths[2].cx-138,paths[2].cy-148.5,1250,413,0.935,1.887));
+paths[2].push(new ellipseArc(paths[2].cx+104.5,paths[2].cy-56,549,266,-0.02,0.8));
+paths[2].push(new ellipseArc(paths[2].cx-28,paths[2].cy-120.5,933,444,0.8,2.28));
     }
 
     function assignTextBalls(k) {
@@ -666,8 +511,10 @@ paths[2].push(new arc(paths[2].cx+177.6,paths[2].cy+153.8,11,Math.PI,-Math.PI))
         for (var i = 0; i < paths[k].length; i++) {
             len += paths[k][i].length;
         }
+
         for (var i = 0; i < paths[k].length; i++) {
-            var bpl = paths[k][i].length * (25 / 100);
+            
+            var bpl = paths[k][i].length * (1/4);
             for (var j = 0; j < bpl; j++) {
                 do {
                     var p = parseInt(Math.random() * total);
@@ -687,9 +534,9 @@ paths[2].push(new arc(paths[2].cx+177.6,paths[2].cy+153.8,11,Math.PI,-Math.PI))
                 particles[p].animateOpacity = true;
                 particles[p].originOpacity = 1;
                 particles[p].animationDone = false;
-                particles[p].originX = 5 * (0.5 - Math.random()) + paths[k][i].getPoint(j / bpl).x;
-                particles[p].originY = 5 * (0.5 - Math.random()) + paths[k][i].getPoint(j / bpl).y;
-                console.log(j/bpl);
+                particles[p].originX = 0 * (0.5 - Math.random()) + paths[k][i].getPoint(j / bpl).x;
+                particles[p].originY = 0 * (0.5 - Math.random()) + paths[k][i].getPoint(j / bpl).y;
+
             }
         }
     }
@@ -699,74 +546,14 @@ paths[2].push(new arc(paths[2].cx+177.6,paths[2].cy+153.8,11,Math.PI,-Math.PI))
         ctx.fillRect(0, 0, W, H);
         ctx.fill();
 
-        if (stop && initialDelayDone) {
-            if (a[1] > 1) {
-                a[1] += (0 - a[1]) / 12;
-                for (var i = 0; i < particles.length; i++) {
-                    var p = particles[i];
-                    p.meanY += (H / 2 - p.meanY) / 12;
-                }
-            }
-            else {
-                explode();
-                drawText();
-                assignTextBalls(0);
-                setTimeout(function () { explode(); assignTextBalls(1); }, 3000);
-                setTimeout(explode, 6000);
-                setTimeout(function () { explode(); assignTextBalls(2); }, 10000);
-                setTimeout(initMenuText, 12000);
-
-                stop = false;
-
-            }
-            increment /= 1.001;
-        }
+        
 
         for (var i = 0; i < particles.length; i++) {
             var p = particles[i];
             p.draw();
         }
 
-        ctx.fillStyle = HEXAtoRGBA("#000000", 0.5);
-        for (var i = 0 ; i < wordRects.length; i++)
-            wordRects[i].draw();
-
-        for (var n = 0; n < wordParticles.length; n++) {
-            for (var j = 0; j < wordParticles[n].length; j++) {
-                for (var i = 0; i < wordParticles[n][j].length; i++) {
-                    wordParticles[n][j][i].draw();
-                }
-            }
-        }
-
-        for (var n = 0; n < wordParticles.length; n++) {
-            for (var j = 0; j < wordParticles[n].length; j++) {
-                for (var i = 0; i < wordParticles[n][j].length; i++) {
-
-
-                    ctx.beginPath();
-                    ctx.lineWidth = 1;
-                    var opacity = 0.5;
-                    ctx.moveTo(wordParticles[n][j][i].x, wordParticles[n][j][i].y);
-                    if (i + 1 < words[n][j].points.length) {
-                        ctx.lineTo(wordParticles[n][j][i + 1].x, wordParticles[n][j][i + 1].y);
-
-                        var d = Math.sqrt(Math.pow(wordParticles[n][j][i + 1].x - wordParticles[n][j][i].x, 2) + Math.pow(wordParticles[n][j][i + 1].y - wordParticles[n][j][i].y, 2));
-                        var d2 = Math.sqrt(Math.pow(wordParticles[n][j][i + 1].originX - wordParticles[n][j][i].originX, 2) + Math.pow(wordParticles[n][j][i + 1].originY - wordParticles[n][j][i].originY, 2))
-                        if (d <= d2)
-                            opacity = 0.5
-                        else if (d <= d2 + 15) {
-                            opacity = (d2 + 15 - d) / 15 * 0.5;
-                        }
-                        else
-                            opacity = 0;
-                    }
-                    ctx.strokeStyle = "rgba(255,255,255," + opacity + ")";
-                    ctx.stroke();
-                    ctx.closePath();
-                }
-            }
-        }
+  
 
 
         for (var i = 0; i < t.length; i++)
@@ -787,58 +574,14 @@ paths[2].push(new arc(paths[2].cx+177.6,paths[2].cy+153.8,11,Math.PI,-Math.PI))
 
     var timer = setInterval(draw, spf);
 
-    setTimeout(function () { initialDelayDone = true }, 2000);
-    document.body.onload = stoploading;
+    explode();
+    drawText();
+    assignTextBalls(2);
+    increment /= 1.001;
+
 
     var boxes = $id("menuBox").getElementsByTagName("td");
-    var pages = [$id("projectsContainer"), $id("contactContainer"), $id("aboutContainer")];
-
-    function initEvents() {
-
-        for (var i = 0; i < boxes.length; i += 2) {
-            boxes[i].onmouseover = function (e) {
-                var target = e.target || e.srcElement;
-                wordRects[target.getAttribute("box")].drawing = true;
-
-
-
-                for (var i = 0; i < pages.length; i++)
-                    pages[i].style.display = "none";
-
-                pages[target.getAttribute("box")].style.display = "block";
-
-                $id("pageContainer").className = "peek";
-            };
-
-            boxes[i].onmouseout = function (e) {
-                var target = e.target || e.srcElement;
-
-                wordRects[target.getAttribute("box")].drawing = false;
-
-
-                for (var i = 0; i < pages.length; i++)
-                    pages[i].style.display = "none";
-
-                pages[target.getAttribute("box")].style.display = "block";
-
-                if ($id("pageContainer").className == "peek") 
-                    $id("pageContainer").removeAttribute("class");
-                
-            };
-
-            boxes[i].onclick = function (e) {
-                var target = e.target || e.srcElement;
-
-                for (var i = 0; i < pages.length; i++)
-                    pages[i].style.display = "none";
-
-                pages[target.getAttribute("box")].style.display = "block";
-
-                $id("canvasContainer").className = 'zoomOut';
-                $id("pageContainer").className = 'slideIn';
-            }
-        }
-    }
+    var pages = [$id("projectsContainer"), $id("contactContainer"), $id("aboutContainer")]
 
 
 </script>

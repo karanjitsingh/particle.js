@@ -20,9 +20,9 @@ arc(cx+304.8,cy-58.4,89,Math.PI*-0.26,Math.PI * 0.234)
 line(cx-388,cy-86,cx-350,cy-28)
 line(cx-350,cy-28,cx-372,cy-7.5)
 line(cx-372,cy-7.5,cx-347,cy+19)
-arc(cx-371,cy+34.1,12,Math.PI,-Math.PI)
+arc(cx-371,cy+34.1,12,-Math.PI,Math.PI)
 
-arc(cx+4.6,cy+168,11,Math.PI,-Math.PI)
+arc(cx+4.6,cy+168,11,-Math.PI,Math.PI)
 
-arc(cx+91.1,cy+160.8,11,Math.PI,-Math.PI)
-arc(cx+177.6,cy+153.8,11,Math.PI,-Math.PI)
+arc(cx+91.1,cy+160.8,11,-Math.PI,Math.PI)
+arc(cx+177.6,cy+153.8,11,-Math.PI,Math.PI)
