@@ -5,6 +5,7 @@ var mouseY = -100;
 window.onmousemove = function(e) {
 		mouseX = e.clientX;
 		mouseY = e.clientY;
+		document.title = mouseX + "," + mouseY;
 	}
 
 
@@ -18,7 +19,7 @@ function HEXAtoRGBA(hex, a) {
 	}
 
 
-var particles =  function(canvas){
+var Particles =  function(canvas){
 	var paths = [];
 	var W = canvas.width;
 	var H = canvas.height;
@@ -26,61 +27,37 @@ var particles =  function(canvas){
 
 	ctx = canvas.getContext('2d');
 
-	this.params = {
-		cx: H/2,
-		cy: W/2,
-		interval: 30,
-		particles: {
-			pop: true,
-			popColors: ["#E04836", "#F39D41", "#DDDDDD", "#5696BC"],
-			radius: 4,
-			radiusVariation: 0
-		},
-		canvas: {
-			drawBG: false,
-			BGColor: "#111111",
-			scale:1
-		}
-	}
-
 	var particles = [];
 
-	this.setPath = function(path,lineDensity) {
+	this.setPath = function(path) {
 		
 
 		var length = 0;
 		for(var i=0;i< path.length;i++)
 			length+=path[i].length;
-
-		path.pathLenght = length;
-
 		
-
 		for(var i = 0;i<path.length; i++) {
 			
-			var bpl = parseInt(path[i].length * lineDensity);
+			var bpl = parseInt(path[i].length * Particles.params.lineDensity);
 		
 			for (var j = 0; j < bpl; j++) {
-				var p = new create_particle(parseInt(Math.random()*3));
+				var p = new Particles.create_particle(parseInt(Math.random()*3));
 
 				p.vx = 0;
 				p.vy = 0;
-
-				p.repel = true;
-				//p.blur = true;
 				
-				p.animate = particleAnimations.mouseRepel;
+				p.animate = Particles.animations.mouseRepel;
 
 				p.animateOpacity = true;
 				p.originOpacity = 1;
 				p.animationDone = false;
-				p.originX = 0 * (0.5 - Math.random()) + path[i].getPoint(j / bpl).x;
-				p.originY = 0 * (0.5 - Math.random()) + path[i].getPoint(j / bpl).y;
+				p.x = p.originX = Particles.params.randomness * (0.5 - Math.random()) + path[i].getPoint(j / bpl).x;
+				p.y = p.originY = Particles.params.randomness * (0.5 - Math.random()) + path[i].getPoint(j / bpl).y;
+
+				
 
 				particles.push(p);
-
 			}
-			
 		}
 
 
@@ -91,12 +68,26 @@ var particles =  function(canvas){
 
 	}
 
+	this.addBackgroundParticles = function(n) {
+		for(var i=0;i<n;i++) {
+			var p = new Particles.create_particle(parseInt(Math.random()*3));
+			p.animateOpacity = true;
+			p.originOpacity = 0.4;
+			p.opacity = 0;
+			p.originX = p.x = Math.random() * W;
+			p.originY = p.y = Math.random() * H;
+			p.vx= 1 + Math.random()*5;
+			p.vy= 1 + Math.random()*5;
+			p.animate = Particles.animations.random;
+			particles.push(p);
+		}
+	}
+
 	this.draw = function() {
 
-		if(this.params.canvas.drawBG == true) {
-			ctx.fillStyle = this.params.canvas.drawBG;
+		if(Particles.params.canvas.drawBG == true) {
+			ctx.fillStyle = Particles.params.canvas.BGColor;
 			ctx.fillRect(0, 0, W, H);
-			ctx.fill();
 		}
 		else
 			ctx.clearRect(0,0,W,H);
@@ -108,7 +99,7 @@ var particles =  function(canvas){
 	}
 
 	this.start = function() {
-		timer = setInterval(this.draw.bind(this), this.params.interval);
+		timer = setInterval(this.draw.bind(this), Particles.params.interval);
 	}
 
 
@@ -120,16 +111,30 @@ var particles =  function(canvas){
 };
 
 
+Particles.params = {
+		interval: 30,
+		pop: true,
+		popColors: ["#E04836", "#F39D41", "#DDDDDD", "#5696BC"],
+		radius: 4,
+		radiusVariation: 0,
+		randomness: 0,
+		lineDensity:0.25,
+		canvas: {
+			drawBG: true,
+			BGColor: "#000",
+			scale:1
+		}
+	};
 
-create_particle = function(i) {
+
+Particles.create_particle = function(i) {
 		this.i = i;
-		this.x = i / total * W;
-		this.y = H * 2 / 3;
+		this.x = 0;
+		this.y = 0;
 
 		this.radius = 4;
 		this.opacity = 1;
 
-		this.pop = true;
 		this.radiusLag = 1;
 
 		this.e = 0.8;
@@ -148,18 +153,14 @@ create_particle = function(i) {
 
 
 		this.blurRadius = 0;
-		this.blur = false;
-
-		this.repel = false;
 
 
-		this.blurRect = false;
 
 		this.draw = function () {
 
 			this.animate();
 
-			if (this.pop) {
+			if (Particles.params.pop) {
 				if (this.radius < 2.001) {
 					this.radius += Math.random() * 4;
 					this.radiusLag = Math.random() * 12 + 12;
@@ -174,15 +175,15 @@ create_particle = function(i) {
 
 			ctx.beginPath();
 
-			if (this.blurRadius == 0 || !this.blur) {
-				ctx.fillStyle = HEXAtoRGBA(POP_COLORS[this.i % 3], this.opacity);
+			if (this.blurRadius == 0 || !Particles.animations.params.blur) {
+				ctx.fillStyle = HEXAtoRGBA(Particles.params.popColors[this.i % 3], this.opacity);
 				ctx.arc(this.x, this.y, this.radius, Math.PI * 2, false);
 			}
 			else {
 				var radgrad = ctx.createRadialGradient(this.x, this.y, this.radius, this.x, this.y, this.radius + this.blurRadius * 30);
 
-				radgrad.addColorStop(0, HEXAtoRGBA(POP_COLORS[this.i % 3], this.opacity));
-				radgrad.addColorStop(1, HEXAtoRGBA(POP_COLORS[this.i % 3], 0));
+				radgrad.addColorStop(0, HEXAtoRGBA(Particles.params.popColors[this.i % 3], this.opacity));
+				radgrad.addColorStop(1, HEXAtoRGBA(Particles.params.popColors[this.i % 3], 0));
 
 				ctx.fillStyle = radgrad;
 				ctx.arc(this.x, this.y, this.radius + this.blurRadius * 30, Math.PI * 2, false);
@@ -195,7 +196,7 @@ create_particle = function(i) {
 		};
 	};
 
-particles.shapes = {
+Particles.shapes = {
 		line: function(x1, y1, x2, y2) {
 			this.x1 = x1 < x2?x1:x2;
 			this.x2 = x1 < x2?x2:x1;
@@ -273,93 +274,107 @@ particles.shapes = {
 		}
 	};
 
-particleAnimations = {
+Particles.animations = {
+
+		params: {
+			blur:false,
+			forceFactor: 1,
+			maxRepelDistance: 100,
+			minBlurDistance: 100 / 2,
+			maxBlurDistance: 100 * 2,
+			marginBlurDistance: 100 * 3 / 4
+		},
 
 		random: function() {
-			this.x += this.vx;
-			this.y += this.vy;
 
-			if ((this.x - this.radius < 0 && this.vx < 0) || (this.x + this.radius > W && this.vx > 0))
-				this.vx = -1 * this.vx;
-			if ((this.y - this.radius < 0 && this.vy < 0) || (this.y + this.radius > H && this.vy > 0))
-				this.vy = -1 * this.vy;
+
+            this.x += this.vx;
+            this.y += this.vy;
+
+
+                if ((this.x - this.radius < 0 && this.vx < 0) || (this.x + this.radius > W && this.vx > 0))
+                    this.vx = -1 * this.vx;
+                if ((this.y - this.radius < 0 && this.vy < 0) || (this.y + this.radius > H && this.vy > 0))
+                    this.vy = -1 * this.vy;
+
 
 		},
 
 
 		mouseRepel: function() {
 
-			this.params = {
-				forceFactor: 1,
-				maxRepelDistance: 100,
-				minBlurDistance: this.maxRepelDistance / 2,
-				maxBlurDistance: this.maxRepelDistance * 2,
-				marginBlurDistance: this.maxRepelDistance * 3 / 4
-			};
 
-			var posWRTMouse = {
-				x: this.x - mouseX,
-				y: this.y - mouseY
-			};
+            this.x += this.vx;
+            this.y += this.vy;
 
-			var posWRTOrigin = {
-				x: this.x - this.originX,
-				y: this.y - this.originY
-			};
+            if (!this.animationDone) {
+                this.x += (this.originX - this.x) / 2;
+                this.y += (this.originY - this.y) / 2;
 
-			var distance = Math.sqrt(
-				posWRTMouse.x * posWRTMouse.x +
-				posWRTMouse.y * posWRTMouse.y
-			);
+                if (Math.abs(this.x - this.originX) < 0.1 && Math.abs(this.y - this.originY) < 0.1) {
+                    this.animationDone = true;
+                }
+            }
 
-			var distance2 = Math.sqrt(
-				posWRTOrigin.x * posWRTOrigin.x +
-				posWRTOrigin.y * posWRTOrigin.y
-			);
 
-			var forceDirection = {
-				x: distance != 0 ? posWRTMouse.x / distance : 0,
-				y: distance != 0 ? posWRTMouse.y / distance : 0
-			};
+            var posWRTMouse = {
+                x: this.x - mouseX,
+                y: this.y - mouseY
+            };
 
-			var gravityDirection = {
-				x: distance2 != 0 ? posWRTOrigin.x / distance2 : 0,
-				y: distance2 != 0 ? posWRTOrigin.y / distance2 : 0
-			};
+            var posWRTOrigin = {
+                x: this.x - this.originX,
+                y: this.y - this.originY
+            };
 
-			var force = (this.maxRepelDistance - distance) / this.maxRepelDistance;
-			var gravity = -distance2 / 1000;
-			gravity = Math.abs(gravity) > 0.1 ? -0.1 : gravity;
+            var distance = Math.sqrt(
+                posWRTMouse.x * posWRTMouse.x +
+                posWRTMouse.y * posWRTMouse.y
+            );
 
-			if (force < 0) force = 0;
+            var distance2 = Math.sqrt(
+                posWRTOrigin.x * posWRTOrigin.x +
+                posWRTOrigin.y * posWRTOrigin.y
+            );
 
-			this.vx += forceDirection.x * force * 30 / this.forceFactor + gravityDirection.x * gravity * 30;
-			this.vy += forceDirection.y * force * 30 / this.forceFactor + gravityDirection.y * gravity * 30;   //set spf as 30
+            var forceDirection = {
+                x: distance != 0 ? posWRTMouse.x / distance : 0,
+                y: distance != 0 ? posWRTMouse.y / distance : 0
+            };
 
-			if (isNaN(this.vx))
-				this.vx = 0;
-			if (isNaN(this.vy))
-				this.vy = 0;
+            var gravityDirection = {
+                x: distance2 != 0 ? posWRTOrigin.x / distance2 : 0,
+                y: distance2 != 0 ? posWRTOrigin.y / distance2 : 0
+            };
 
-			this.vx *= 0.9;
-			this.vy *= 0.9;
+            var force = (Particles.animations.params.maxRepelDistance - distance) / Particles.animations.params.maxRepelDistance;
+            var gravity = -distance2 / 1000;
+            gravity = Math.abs(gravity) > 0.1 ? -0.1 : gravity;
 
-			if (distance2 <= this.minBlurDistance)
-				this.blurRadius = 0;
-			else if (distance2 <= this.maxRepelDistance)
-				this.blurRadius = (distance2 - this.minBlurDistance) / this.marginBlurDistance * 0.4;
-			else
-				this.blurRadius = 0.4;
+            if (force < 0) force = 0;
 
-			this.x += this.vx;
-			this.y += this.vy;
 
-			this.x += (this.originX - this.x) / 2;
-			this.y += (this.originY - this.y) / 2;
+            if (isNaN(this.vx))
+                this.vx = 0;
+            if (isNaN(this.vy))
+                this.vy = 0;
 
-			if (Math.abs(this.x - this.originX) < 0.1 && Math.abs(this.y - this.originY) < 0.1) {
-				this.animationDone = true;
-			}
+            this.vx += forceDirection.x * force * 30 / Particles.animations.params.forceFactor + gravityDirection.x * gravity * 30;
+            this.vy += forceDirection.y * force * 30 / Particles.animations.params.forceFactor + gravityDirection.y * gravity * 30;
+
+           
+
+            this.vx *= 0.9;
+            this.vy *= 0.9;
+
+            if (distance2 <= Particles.animations.params.minBlurDistance)
+                this.blurRadius = 0;
+            else if (distance2 <= Particles.animations.params.maxRepelDistance)
+                this.blurRadius = (distance2 - Particles.animations.params.minBlurDistance) / Particles.animations.params.marginBlurDistance * 0.4;
+            else
+                this.blurRadius = 0.4;
+
+
 		}
 	};
 
