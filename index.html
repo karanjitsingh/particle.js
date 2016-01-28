@@ -2,456 +2,158 @@
 <html>
 
 <head>
-    <style>
-        html, body {
-            height: 100%;
-        }
+	<style>
+		html, body {
+			height: 100%;
+		}
 
-        body {
-            padding: 0px;
-            margin: 0px;
-            height: 100%;
-            background: #f5f5f5 url('./images/broken_noise.png') repeat;
-        }
+		body {
+			padding: 0px;
+			margin: 0px;
+			height: 100%;
+			background: #f5f5f5 url('./images/broken_noise.png') repeat;
+		}
 
-        #canvasContainer {
-            -webkit-transition: -webkit-transform ease-in 0.3s;
-        }
+	</style>
 
-        #pageContainer {
-            transition: top ease-in 0.2s, left ease-in 0.2s, box-shadow ease-in 0.2s, -webkit-transform ease-in 0.2s;
-            transition-delay: 0.2s;
-            -webkit-transform: scale(0.95,0.95);
-        }
-
-        .zoomOut {
-            z-index: -1;
-            -webkit-transform: scale(0.95,0.95);
-        }
-
-        .slideIn {
-            top: 0% !important;
-            -webkit-transform: scale(1,1) !important;
-        }
-
-        .peek {
-            top: 95% !important;
-            -webkit-transform: scale(0.95,0.95);
-            box-shadow: 0px 0px 8px rgba(0,0,0,0.5);
-        }
-
-        @-webkit-keyframes fadeTint {
-            to {
-                opacity: 0;
-            }
-        }
-
-        @-webkit-keyframes slideIncard {
-            from {
-                margin-left: 50px;
-            }
-
-            to {
-                opacity: 0;
-                margin-left: 100px;
-            }
-        }
-
-
-        #card2 {
-            -webkit-animation-delay: 0.1s;
-        }
-
-        .fadeTintDiv {
-            -webkit-animation-name: fadeTint;
-            -webkit-animation-duration: 0.5s;
-            -webkit-animation-fill-mode: forwards;
-            -webkit-animation-play-state: running;
-        }
-
-        table {
-            padding: 0px;
-            border-spacing: 0px;
-            table-layout: fixed;
-        }
-
-        tr, td {
-            border-spacing: 0px;
-            padding: 0px;
-        }
-
-    </style>
-
-    <script>
-
-    </script>
+	<script type="text/javascript" src="headout.js"></script>
 </head>
 
 <body>
-    <div style="position:absolute; height:100%; width:100%; overflow:hidden;">
-        <div style="position:absolute; height:100%; width:100%; box-shadow:0px 0px 8px rgba(0,0,0,0.5);" id="canvasContainer">
-            <canvas id=canvas style="margin:0 auto 0 auto; position:absolute;top:0px;"></canvas>
-            <div style="position:absolute; height:70px; width:100%; left:0px; bottom:65px;" id="menuBox">
-                <table align="center" style="border-spacing:0px; padding:0px; height:50px; margin:0 auto 0 auto;">
-                    <tbody>
-                        <tr>
-                            <td style="width:237px;height:70px;" box="0"></td>
-                            <td style="width:35px;"></td>
-                            <td style="width: 205px; height: 70px;" box="1"></td>
-                            <td style="width:35px;"></td>
-                            <td style="width: 150px; height: 70px;" box="2"></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <div style="position: absolute; top: 100%; height: 100%; width: 100%;" id="pageContainer">
-            <div style="height: 100%; width: 100%; top: 100%; background: #E04836; display: none;" id="projectsContainer"></div>
-            <div style="height: 100%; width: 100%; top: 100%; background: #F39D41; display: none;" id="contactContainer"></div>
-            <div style="height: 100%; width: 100%; top: 100%; background: #5696BC; display: none;" id="aboutContainer"></div>
-        </div>
-    </div>
+	<canvas id="canvas" style="margin:0 auto 0 auto; position:absolute;top:0px;"></canvas>
 </body>
 
 
 <script>
-    var canvas = document.getElementById("canvas");
-    var W = window.innerWidth;
-    var H = window.innerHeight;
-    var total = 1500;
-    var t;
-    canvas.width = W;
-    canvas.height = H;
-    var ctx = canvas.getContext("2d");
-    var t = [0, 0];
-    var a = [100, 40];
-    var l = [20, 1000];
-    var POP_COLORS = ["#E04836", "#F39D41", "#DDDDDD", "#5696BC"];
-    var CANVAS_BG = "#111111";
-    var initialDelayDone = false;
-    var mouseX = -100;
-    var mouseY = -100;
-    var animatingText = false;
-    var paths = [[], [], []];
+	var canvas = document.getElementById("canvas");
+	var W = window.innerWidth;
+	var H = window.innerHeight;
+	var total = 1500;
+	var t;
+	canvas.width = W;
+	canvas.height = H;
+	var ctx = canvas.getContext("2d");
+
+	var POP_COLORS = ["#E04836", "#F39D41", "#DDDDDD", "#5696BC"];
+	var CANVAS_BG = "#111111";
 
 
-    var stop = false;
-    var spf = 30;
-    var increment = 0.1;
+	window.onresize = function () {
+		W = window.innerWidth;
+		H = window.innerHeight;
+		canvas.width = W;
+		canvas.height = H;
+	};
 
-    var w = 2 * Math.PI / 10;
-    var k = 2 * Math.PI;
-
-    var gravity = 0;
+	var particlesLogo = new particles(canvas);
+	
 
 
-    var amp = 10;
+	var path = [];
+	var cx = W/2, cy = H/2;
+	path.push(new particles.shapes.arc(cx - 359,cy -105,35,Math.PI*0.81,-Math.PI * 0.57));
+	path.push(new particles.shapes.line(cx - 370,cy-139, cx -250,cy-149));
+	path.push(new particles.shapes.line(cx -250,cy-149,cx-227,cy-111));
+	path.push(new particles.shapes.arc(cx+190,cy+672,886,Math.PI*-0.6561,-1.6903));
+	path.push(new particles.shapes.arc(cx+130,cy+153.4,364,-0.54*Math.PI,-0.8657));
+	path.push(new particles.shapes.arc(cx+304.8,cy-58.4,89,Math.PI*-0.26,Math.PI * 0.234));
+	path.push(new particles.shapes.line(cx-388,cy-86,cx-350,cy-28));
+	path.push(new particles.shapes.line(cx-350,cy-28,cx-372,cy-7.5));
+	path.push(new particles.shapes.line(cx-372,cy-7.5,cx-347,cy+19));
+	path.push(new particles.shapes.line(cx-347,cy+19,cx -372.7,cy+23.2));
+	path.push(new particles.shapes.arc(cx-373,cy+34.3,11,Math.PI*0.4,Math.PI *1.5));
+	path.push(new particles.shapes.line(cx -369.7,cy+45,cx-343,cy+40));
+	path.push(new particles.shapes.line(cx -359,cy+68,cx-343,cy+40));
+	path.push(new particles.shapes.line(cx -335.4,cy+76,cx -359,cy+68));
+	path.push(new particles.shapes.arc(cx+4.6,cy+168,11,-Math.PI,Math.PI));
+	path.push(new particles.shapes.arc(cx+91.1,cy+160.8,11,-Math.PI,Math.PI));
+	path.push(new particles.shapes.arc(cx+177.6,cy+153.8,11,-Math.PI,Math.PI));
+	path.push(new particles.shapes.arc(cx -304.4,cy+106,43, Math.PI*1.14, Math.PI*1.238));
+	path.push(new particles.shapes.line(cx-343.4,cy+87.7,cx-368,cy+139));
+	path.push(new particles.shapes.arc(cx -334,cy+154,37 , Math.PI*0.5, Math.PI*1.136));
+	path.push(new particles.shapes.line(cx-333,cy+191,cx-228.8,cy+181));
+	path.push(new particles.shapes.arc(cx-228,cy+172,9,0.3,Math.PI*0.5));
+	path.push(new particles.shapes.arc(cx-224,cy+139,18,-Math.PI*0.27,0.5));
+	path.push(new particles.shapes.line(cx-231,cy+109,cx-211,cy+126));
+	path.push(new particles.shapes.line(cx-219.3,cy+174.7,cx-208.2,cy+147.8));
+	path.push(new particles.shapes.arc(cx+0,cy-563,711,Math.PI*0.5334, Math.PI*0.604));
+	path.push(new particles.shapes.arc(cx-2,cy+169.5,38,Math.PI*0.44, Math.PI*0.79));
+	path.push(new particles.shapes.line(cx-32,cy+192.7,cx-74,cy+143.4));
+	path.push(new particles.shapes.arc(cx+183,cy+144,40,0.46,Math.PI*0.48));
+	path.push(new particles.shapes.line(cx+6,cy+206.8,cx+185,cy+184));
+	path.push(new particles.shapes.arc(cx+289,cy+149,57,Math.PI*1.15,Math.PI *1.31));
+	path.push(new particles.shapes.arc(cx+170,cy-119.4,234.2,0.539,1.08));
+	path.push(new particles.shapes.line(cx+218.6,cy+161.9,cx+238.4,cy+123));
+	path.push(new particles.shapes.line(cx+257.2,cy+101.6,cx+280,cy+87.3));
+	path.push(new particles.shapes.ellipseArc(cx+256.5,cy-28.5,331,160,4.6,-0.75));
+	path.push(new particles.shapes.ellipseArc(cx+202,cy-47.5,377,206,4.6,-0.36));
+	path.push(new particles.shapes.ellipseArc(cx+290,cy+222,1514,752,3.737,-1.715));
+	path.push(new particles.shapes.ellipseArc(cx+320,cy+389,2006,997,3.999,-1.653));
+	path.push(new particles.shapes.ellipseArc(cx+90,cy-92,597,250,0.26,1.07));
+	path.push(new particles.shapes.ellipseArc(cx-138,cy-148.5,1250,413,0.935,1.887));
+	path.push(new particles.shapes.ellipseArc(cx+104.5,cy-56,549,266,-0.02,0.8));
+	path.push(new particles.shapes.ellipseArc(cx-28,cy-120.5,933,444,0.8,2.28));
 
-    paths[0].cx = W / 2;
-    paths[0].cy = H / 2;
-    paths[1].cx = W / 2;
-    paths[1].cy = H / 2;
-    paths[2].cx = W/2;
-    paths[2].cy = H/2;
 
-    window.onmousemove = function(e) {
-        mouseX = e.clientX;
-        mouseY = e.clientY;
-    }
+	particlesLogo.setPath(path,0.2);
+    particlesLogo.start();
 
-    function $id(obj) {
-        return document.getElementById(obj);
-    }
 
-    function HEXAtoRGBA(hex, a) {
-        hex = hex.substring(1, 7);
-        return "rgba(" + parseInt(hex.substr(0, 2), 16) +
+	/*var mouseX = -100;
+	var mouseY = -100;
+	var animatingText = false;
+	var paths = [[], [], []];
+
+
+	var stop = false;
+	var spf = 30;
+	var increment = 0.1;
+
+	var w = 2 * Math.PI / 10;
+	var k = 2 * Math.PI;
+
+	var gravity = 0;
+
+
+	var amp = 10;
+
+	paths[0].cx = W / 2;
+	paths[0].cy = H / 2;
+	paths[1].cx = W / 2;
+	paths[1].cy = H / 2;
+	paths[2].cx = W/2;
+	paths[2].cy = H/2;
+
+	window.onmousemove = function(e) {
+		mouseX = e.clientX;
+		mouseY = e.clientY;
+	}
+
+	function $id(obj) {
+		return document.getElementById(obj);
+	}
+
+	function HEXAtoRGBA(hex, a) {
+		hex = hex.substring(1, 7);
+		return "rgba(" + parseInt(hex.substr(0, 2), 16) +
 			"," + parseInt(hex.substr(2, 2), 16) +
 			"," + parseInt(hex.substr(4, 2), 16) +
 			"," + a + ")";
-    }
+	}
 
-    Math.sgn = function (x) {
-        return (x > 0) - (x < 0);
-    }
+	Math.sgn = function (x) {
+		return (x > 0) - (x < 0);
+	}
 
-    var particles = [];
+	var particles = [];
 
-    for (var i = 0; i < total; i++) {
-        particles.push(new create_particle(i));
-    }
+	for (var i = 0; i < total; i++) {
+		particles.push(new create_particle(i));
+	}
 
 
-    function create_particle(i) {
-        this.i = i;
-        this.x = i / total * W;
-        this.y = H * 2 / 3;
 
-        this.meanY = this.y;
-
-        this.radius = 4;
-        this.opacity = 1;
-
-        this.pop = true;
-        this.radiusLag = 1;
-
-        this.e = 0.8;
-
-        this.vx = 0;
-        this.vy = 0;
-
-        this.originX = 0;
-        this.originY = 0;
-
-        this.animateOpacity = false;
-        this.originOpacity = 0;
-
-        this.assignedText = false;
-        this.animationDone = true;
-
-
-        this.blurRadius = 0;
-        this.blur = false;
-
-        this.repel = false;
-
-        this.forceFactor = 1;
-        this.maxRepelDistance = 100;
-        this.minBlurDistance = this.maxRepelDistance / 2;
-        this.maxBlurDistance = this.maxRepelDistance * 2;
-        this.marginBlurDistance = this.maxRepelDistance * 3 / 4;
-
-        this.blurRect = false;
-
-        this.animate = function () {
-
-            this.vy += gravity;
-
-            this.x += this.vx;
-            this.y += this.vy;
-
-            if (!this.animationDone && (this.assignedText)) {
-                this.x += (this.originX - this.x) / 2;
-                this.y += (this.originY - this.y) / 2;
-
-                if (Math.abs(this.x - this.originX) < 0.1 && Math.abs(this.y - this.originY) < 0.1) {
-                    this.animationDone = true;
-                }
-            }
-            else if (!this.assignedText) {
-
-
-                if ((this.x - this.radius < 0 && this.vx < 0) || (this.x + this.radius > W && this.vx > 0))
-                    this.vx = -1 * this.vx;
-                if ((this.y - this.radius < 0 && this.vy < 0) || (this.y + this.radius > H && this.vy > 0))
-                    this.vy = -1 * this.vy;
-            }
-
-        }
-
-        this.animateMouseRepel = function () {
-            var posWRTMouse = {
-                x: this.x - mouseX,
-                y: this.y - mouseY
-            };
-
-            var posWRTOrigin = {
-                x: this.x - this.originX,
-                y: this.y - this.originY
-            };
-
-            var distance = Math.sqrt(
-                posWRTMouse.x * posWRTMouse.x +
-                posWRTMouse.y * posWRTMouse.y
-            );
-
-            var distance2 = Math.sqrt(
-                posWRTOrigin.x * posWRTOrigin.x +
-                posWRTOrigin.y * posWRTOrigin.y
-            );
-
-            var forceDirection = {
-                x: distance != 0 ? posWRTMouse.x / distance : 0,
-                y: distance != 0 ? posWRTMouse.y / distance : 0
-            };
-
-            var gravityDirection = {
-                x: distance2 != 0 ? posWRTOrigin.x / distance2 : 0,
-                y: distance2 != 0 ? posWRTOrigin.y / distance2 : 0
-            };
-
-            var force = (this.maxRepelDistance - distance) / this.maxRepelDistance;
-            var gravity = -distance2 / 1000;
-            gravity = Math.abs(gravity) > 0.1 ? -0.1 : gravity;
-
-            if (force < 0) force = 0;
-
-            this.vx += forceDirection.x * force * spf / this.forceFactor + gravityDirection.x * gravity * spf;
-            this.vy += forceDirection.y * force * spf / this.forceFactor + gravityDirection.y * gravity * spf;
-
-            if (isNaN(this.vx))
-                this.vx = 0;
-            if (isNaN(this.vy))
-                this.vy = 0;
-
-            this.vx *= 0.9;
-            this.vy *= 0.9;
-
-            if (distance2 <= this.minBlurDistance)
-                this.blurRadius = 0;
-            else if (distance2 <= this.maxRepelDistance)
-                this.blurRadius = (distance2 - this.minBlurDistance) / this.marginBlurDistance * 0.4;
-            else
-                this.blurRadius = 0.4;
-        }
-
-        this.draw = function () {
-
-                this.animate();
-
-            if (this.pop) {
-                if (this.radius < 2.001) {
-                    this.radius += Math.random() * 4;
-                    this.radiusLag = Math.random() * 12 + 12;
-                }
-                else
-                    this.radius += (2 - this.radius) / this.radiusLag;
-            }
-
-            if (this.animateOpacity)
-                this.opacity += (this.originOpacity - this.opacity) / 6;
-
-
-            if (this.repel && (mouseX != undefined) && (mouseY != undefined) && this.animationDone) {
-                this.animateMouseRepel();
-            }
-
-            ctx.beginPath();
-
-            if (this.blurRect)
-            {
-                if(this.x > this.blurRect.x && this.x < this.blurRect.x2 && this.y > this.blurRect.y && this.y < this.blurRect.y2 )
-                {
-                    this.blurRadius = 2.4;
-                }
-            }
-
-            if (this.blurRadius == 0 || !this.blur) {
-                ctx.fillStyle = HEXAtoRGBA(POP_COLORS[this.i % 3], this.opacity);
-                ctx.arc(this.x, this.y, this.radius, Math.PI * 2, false);
-            }
-            else {
-                var radgrad = ctx.createRadialGradient(this.x, this.y, this.radius, this.x, this.y, this.radius + this.blurRadius * 30);
-
-                radgrad.addColorStop(0, HEXAtoRGBA(POP_COLORS[this.i % 3], this.opacity));
-                //radgrad.addColorStop(1 - this.blurRadius, HEXAtoRGBA(POP_COLORS[this.i % 3], this.opacity - 0.1));
-                radgrad.addColorStop(1, HEXAtoRGBA(POP_COLORS[this.i % 3], 0));
-
-                ctx.fillStyle = radgrad;
-                ctx.arc(this.x, this.y, this.radius + this.blurRadius * 30, Math.PI * 2, false);
-
-            }
-
-            ctx.fill();
-
-            ctx.closePath();
-            //ctx.fillRect(this.x - this.radius, this.y - this.radius, this.radius * 2, this.radius * 2);
-        };
-    }
-
-    function explode() {
-        for (var i = 0; i < particles.length; i++) {
-            var p = particles[i];
-            p.assignedText = false;
-            p.vx = (0.5 - Math.random()) * 50;
-            p.vy = (0.5 - Math.random()) * 50;
-        }
-    }
-
-    function line(x1, y1, x2, y2) {
-        this.x1 = x1 < x2?x1:x2;
-        this.x2 = x1 < x2?x2:x1;
-        this.y1 = x1 < x2?y1:y2;
-        this.y2 = x1 < x2?y2:y1;
-        if (this.x1 - this.x2 != 0)
-            this.theta = Math.atan((this.y1 - this.y2) / (this.x1 - this.x2));
-        else
-            this.theta = Math.PI / 2
-
-        this.length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-
-        var ck = this.length * Math.cos(this.theta);
-        var sk = this.length * Math.sin(this.theta);
-
-        this.getPoint = function (n) {
-            return { x: this.x1 + n * ck, y: this.y1 + n * sk };
-        };
-    }
-
-    function circle(x, y, r) {
-        this.x = x;
-        this.y = y;
-        this.r = r;
-
-        this.length = 2 * Math.PI * r;
-
-        var k = this.length * Math.PI * 2;
-
-        this.getPoint = function (n) {
-            return { x: this.x + Math.sin(n * k) * this.r, y: this.y + Math.cos(n * k) * this.r };
-        };
-    }
-
-    function arc(x, y, r, sa, ea) {
-        this.x = x;
-        this.y = y;
-        this.sa = sa;
-        this.ea = ea;
-        this.theta = this.ea - this.sa;
-        if(this.theta<0)
-            this.theta = (2 * Math.PI + this.theta);
-
-        //else
-            this.length = this.theta * r;
-
-        this.getPoint = function (n) {
-            return { x: this.x + r * Math.cos(this.sa + n * this.theta), y: this.y + r * Math.sin(this.sa + n * this.theta) };
-        };
-    }
-
-    function ellipseArc(x,y,w,h,sa,ea) {
-        this.x = x;
-        this.y = y;
-        this.w = w;
-        this.h = h;
-
-        this.sa = sa;
-        this.ea = ea;
-        this.theta = this.ea - this.sa;
-
-        if(this.theta<0)
-            this.theta = (2 * Math.PI + this.theta);
-        //else
-            this.length = Math.atan(this.w/this.h * Math.tan(this.theta));
-
-            /*console.log(this.w);
-            console.log(this.h);
-            console.log(Math.atan(this.w/this.h * Math.tan(this.sa)));
-            console.log(Math.atan(this.w/this.h * Math.tan(this.ea)));*/
-
-
-
-            this.length =( 1.111 * (Math.sqrt(
-                    Math.pow(  this.w/2 * (Math.cos(this.sa) - Math.cos(this.ea) ),2) + 
-                    Math.pow(   this.h/2 *  (Math.sin(this.sa) - Math.sin(this.ea)),2  )
-                    )));
-
-        this.getPoint = function (n) {
-            return { x: this.x + this.w/2 * Math.cos(this.sa + n * this.theta), y: this.y + this.h/2 * Math.sin(this.sa + n * this.theta) };
-        };
-    }
-
-    function drawText() {
+	function drawText() {
 paths[2].push(new arc(paths[2].cx - 359,paths[2].cy -105,35,Math.PI*0.81,-Math.PI * 0.57));
 paths[2].push(new line(paths[2].cx - 370,paths[2].cy-139, paths[2].cx -250,paths[2].cy-149));
 paths[2].push(new line(paths[2].cx -250,paths[2].cy-149,paths[2].cx-227,paths[2].cy-111));
@@ -497,91 +199,76 @@ paths[2].push(new ellipseArc(paths[2].cx+90,paths[2].cy-92,597,250,0.26,1.07));
 paths[2].push(new ellipseArc(paths[2].cx-138,paths[2].cy-148.5,1250,413,0.935,1.887));
 paths[2].push(new ellipseArc(paths[2].cx+104.5,paths[2].cy-56,549,266,-0.02,0.8));
 paths[2].push(new ellipseArc(paths[2].cx-28,paths[2].cy-120.5,933,444,0.8,2.28));
-    }
+	}
 
-    function assignTextBalls(k) {
+	function assignTextBalls(k) {
 
-        for (var i = 0; i < particles.length; i++) {
-            particles[i].assignedText = false;
-            particles[i].animateOpacity = true;
-            particles[i].originOpacity = 0.3;
-        }
+		for (var i = 0; i < particles.length; i++) {
+			particles[i].assignedText = false;
+			particles[i].animateOpacity = true;
+			particles[i].originOpacity = 0.3;
+		}
 
-        var len = 0;
-        for (var i = 0; i < paths[k].length; i++) {
-            len += paths[k][i].length;
-        }
+		var len = 0;
+		for (var i = 0; i < paths[k].length; i++) {
+			len += paths[k][i].length;
+		}
 
-        for (var i = 0; i < paths[k].length; i++) {
-            
-            var bpl = paths[k][i].length * (1/4);
-            for (var j = 0; j < bpl; j++) {
-                do {
-                    var p = parseInt(Math.random() * total);
-                } while (particles[p].assignedText)
+		for (var i = 0; i < paths[k].length; i++) {
+			
+			var bpl = paths[k][i].length * (1/4);
+			for (var j = 0; j < bpl; j++) {
+				do {
+					var p = parseInt(Math.random() * total);
+				} while (particles[p].assignedText)
 
-                particles[p].assignedText = true;
+				particles[p].assignedText = true;
 
-                //special
-                particles[p].vx = 0;
-                particles[p].vy = 0;
+				//special
+				particles[p].vx = 0;
+				particles[p].vy = 0;
 
-                if (k == 2) {
-                    particles[p].repel = true;
-                    particles[p].blur = true;
-                }
+				if (k == 2) {
+					particles[p].repel = true;
+					particles[p].blur = true;
+				}
 
-                particles[p].animateOpacity = true;
-                particles[p].originOpacity = 1;
-                particles[p].animationDone = false;
-                particles[p].originX = 0 * (0.5 - Math.random()) + paths[k][i].getPoint(j / bpl).x;
-                particles[p].originY = 0 * (0.5 - Math.random()) + paths[k][i].getPoint(j / bpl).y;
+				particles[p].animateOpacity = true;
+				particles[p].originOpacity = 1;
+				particles[p].animationDone = false;
+				particles[p].originX = 0 * (0.5 - Math.random()) + paths[k][i].getPoint(j / bpl).x;
+				particles[p].originY = 0 * (0.5 - Math.random()) + paths[k][i].getPoint(j / bpl).y;
 
-            }
-        }
-    }
+			}
+		}
+	}
 
-    function draw() {
-        ctx.fillStyle = CANVAS_BG;
-        ctx.fillRect(0, 0, W, H);
-        ctx.fill();
+	function draw() {
+		ctx.fillStyle = CANVAS_BG;
+		ctx.fillRect(0, 0, W, H);
+		ctx.fill();
 
-        
+		
 
-        for (var i = 0; i < particles.length; i++) {
-            var p = particles[i];
-            p.draw();
-        }
+		for (var i = 0; i < particles.length; i++) {
+			var p = particles[i];
+			p.draw();
+		} 
 
-  
+		//p.originX = (words[n][j].points[i][0] + words[n][j].marginLeft - (words[n][words[n].length - 1].marginLeft + 35) / 2) / 2 + W / 2 + (0.5 - Math.random()) * 4;
+		//p.originY = (words[n][j].points[i][1] - 50) / 2 + H - 100 + (0.5 - Math.random()) * 4;
+	}
 
+	var canvasOpacity = 1;
 
-        for (var i = 0; i < t.length; i++)
-            t[i] = (t[i] + increment) % (parseInt(W / 250 + 1) * 10);
+	
 
-        //p.originX = (words[n][j].points[i][0] + words[n][j].marginLeft - (words[n][words[n].length - 1].marginLeft + 35) / 2) / 2 + W / 2 + (0.5 - Math.random()) * 4;
-        //p.originY = (words[n][j].points[i][1] - 50) / 2 + H - 100 + (0.5 - Math.random()) * 4;
-    }
+	var timer = setInterval(draw, spf);
 
-    var canvasOpacity = 1;
+	explode();
+	drawText();
+	assignTextBalls(2);*/
 
-    window.onresize = function () {
-        W = window.innerWidth;
-        H = window.innerHeight;
-        canvas.width = W;
-        canvas.height = H;
-    };
-
-    var timer = setInterval(draw, spf);
-
-    explode();
-    drawText();
-    assignTextBalls(2);
-    increment /= 1.001;
-
-
-    var boxes = $id("menuBox").getElementsByTagName("td");
-    var pages = [$id("projectsContainer"), $id("contactContainer"), $id("aboutContainer")]
 
 
 </script>
