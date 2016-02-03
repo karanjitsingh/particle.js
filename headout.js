@@ -2,13 +2,6 @@
 var mouseX= -100;
 var mouseY = -100;
 
-window.onmousemove = function(e) {
-		mouseX = e.clientX;
-		mouseY = e.clientY;
-		document.title = mouseX + "," + mouseY;
-	}
-
-
 
 function HEXAtoRGBA(hex, a) {
 		hex = hex.substring(1, 7);
@@ -18,18 +11,30 @@ function HEXAtoRGBA(hex, a) {
 			"," + a + ")";
 	}
 
-
 var Particles =  function(canvas){
 	var paths = [];
 	var W = canvas.width;
 	var H = canvas.height;
 	var timer;
+	var firstDraw = true;
 
 	ctx = canvas.getContext('2d');
+
+
+	canvas.onmousemove = function(e) {
+		mouseX = e.clientX;
+		mouseY = e.clientY;
+		document.title = mouseX + "," + mouseY;
+	}
 
 	var particles = [];
 
 	this.setPath = function(path) {
+		var scale = 1 -Particles.params.scale;
+		scale/=2;
+		var offset = {x: 0,y: 0};
+		offset.x =scale * W;
+		offset.y = scale * H;
 		
 
 		var length = 0;
@@ -51,8 +56,8 @@ var Particles =  function(canvas){
 				p.animateOpacity = true;
 				p.originOpacity = 1;
 				p.animationDone = false;
-				p.x = p.originX = Particles.params.randomness * (0.5 - Math.random()) + path[i].getPoint(j / bpl).x;
-				p.y = p.originY = Particles.params.randomness * (0.5 - Math.random()) + path[i].getPoint(j / bpl).y;
+				p.x = p.originX = Particles.params.randomness * (0.5 - Math.random()) + path[i].getPoint(j / bpl).x + offset.x;
+				p.y = p.originY = Particles.params.randomness * (0.5 - Math.random()) + path[i].getPoint(j / bpl).y + offset.y;
 
 				
 
@@ -85,6 +90,10 @@ var Particles =  function(canvas){
 
 	this.draw = function() {
 
+		var scale = 1 -Particles.params.scale;
+		scale/=2;
+
+
 		if(Particles.params.canvas.drawBG == true) {
 			ctx.fillStyle = Particles.params.canvas.BGColor;
 			ctx.fillRect(0, 0, W, H);
@@ -92,10 +101,12 @@ var Particles =  function(canvas){
 		else
 			ctx.clearRect(0,0,W,H);
 		
+
 		for (var i = 0; i < particles.length; i++) {
 			var p = particles[i];
 			p.draw();
 		}
+
 	}
 
 	this.start = function() {
@@ -109,22 +120,6 @@ var Particles =  function(canvas){
 
 
 };
-
-
-Particles.params = {
-		interval: 30,
-		pop: true,
-		popColors: ["#E04836", "#F39D41", "#DDDDDD", "#5696BC"],
-		radius: 4,
-		radiusVariation: 0,
-		randomness: 0,
-		lineDensity:0.25,
-		canvas: {
-			drawBG: true,
-			BGColor: "#000",
-			scale:1
-		}
-	};
 
 
 Particles.create_particle = function(i) {
@@ -198,6 +193,11 @@ Particles.create_particle = function(i) {
 
 Particles.shapes = {
 		line: function(x1, y1, x2, y2) {
+			x1 *= Particles.params.scale;
+			y1 *= Particles.params.scale;
+			x2 *= Particles.params.scale;
+			y2 *= Particles.params.scale;
+
 			this.x1 = x1 < x2?x1:x2;
 			this.x2 = x1 < x2?x2:x1;
 			this.y1 = x1 < x2?y1:y2;
@@ -218,9 +218,9 @@ Particles.shapes = {
 		},
 
 		circle: function(x, y, r) {
-			this.x = x;
-			this.y = y;
-			this.r = r;
+			this.x = x * Particles.params.scale;
+			this.y = y * Particles.params.scale;
+			this.r = r * Particles.params.scale;
 
 			this.length = 2 * Math.PI * r;
 
@@ -232,10 +232,11 @@ Particles.shapes = {
 		},
 
 		arc: function(x, y, r, sa, ea) {
-			this.x = x;
-			this.y = y;
+			this.x = x * Particles.params.scale;
+			this.y = y * Particles.params.scale;
 			this.sa = sa;
 			this.ea = ea;
+			this.r = r * Particles.params.scale;
 			this.theta = this.ea - this.sa;
 			if(this.theta<0)
 				this.theta = (2 * Math.PI + this.theta);
@@ -244,15 +245,15 @@ Particles.shapes = {
 				this.length = this.theta * r;
 
 			this.getPoint = function (n) {
-				return { x: this.x + r * Math.cos(this.sa + n * this.theta), y: this.y + r * Math.sin(this.sa + n * this.theta) };
+				return { x: this.x + this.r * Math.cos(this.sa + n * this.theta), y: this.y + this.r * Math.sin(this.sa + n * this.theta) };
 			};
 		},
 
 		ellipseArc: function(x,y,w,h,sa,ea) {
-			this.x = x;
-			this.y = y;
-			this.w = w;
-			this.h = h;
+			this.x = x * Particles.params.scale;
+			this.y = y * Particles.params.scale;
+			this.w = w * Particles.params.scale;
+			this.h = h * Particles.params.scale;
 
 			this.sa = sa;
 			this.ea = ea;
@@ -275,15 +276,6 @@ Particles.shapes = {
 	};
 
 Particles.animations = {
-
-		params: {
-			blur:false,
-			forceFactor: 1,
-			maxRepelDistance: 100,
-			minBlurDistance: 100 / 2,
-			maxBlurDistance: 100 * 2,
-			marginBlurDistance: 100 * 3 / 4
-		},
 
 		random: function() {
 
@@ -348,7 +340,7 @@ Particles.animations = {
             };
 
             var force = (Particles.animations.params.maxRepelDistance - distance) / Particles.animations.params.maxRepelDistance;
-            var gravity = -distance2 / 1000;
+            var gravity = -distance2 / Particles.animations.params.gracityFactor;
             gravity = Math.abs(gravity) > 0.1 ? -0.1 : gravity;
 
             if (force < 0) force = 0;
@@ -359,13 +351,13 @@ Particles.animations = {
             if (isNaN(this.vy))
                 this.vy = 0;
 
-            this.vx += forceDirection.x * force * 30 / Particles.animations.params.forceFactor + gravityDirection.x * gravity * 30;
-            this.vy += forceDirection.y * force * 30 / Particles.animations.params.forceFactor + gravityDirection.y * gravity * 30;
+            this.vx += forceDirection.x * force * Particles.params.interval / Particles.animations.params.forceFactor + gravityDirection.x * gravity * Particles.params.interval;
+            this.vy += forceDirection.y * force * Particles.params.interval / Particles.animations.params.forceFactor + gravityDirection.y * gravity * Particles.params.interval;
 
            
 
-            this.vx *= 0.9;
-            this.vy *= 0.9;
+            this.vx *= Particles.animations.params.frictionFactor;
+            this.vy *= Particles.animations.params.frictionFactor;
 
             if (distance2 <= Particles.animations.params.minBlurDistance)
                 this.blurRadius = 0;
@@ -380,3 +372,28 @@ Particles.animations = {
 
 
 
+Particles.params = {
+		interval: 30,
+		pop: true,
+		popColors: ["#E04836", "#F39D41", "#DDDDDD", "#5696BC"],
+		radius: 4,
+		radiusVariation: 0,
+		randomness: 0,
+		lineDensity:0.3,
+		scale:0.5,
+		canvas: {
+			drawBG: true,
+			BGColor: "#000",
+		}
+	};
+
+Particles.animations.params = {
+			blur:false,
+			forceFactor: 10,
+			maxRepelDistance: 100,
+			minBlurDistance: 100 / 2,
+			maxBlurDistance: 100 * 2,
+			marginBlurDistance: 100 * 3 / 4,
+			gracityFactor: 1000,
+			frictionFactor: 0.9
+		};
