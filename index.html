@@ -30,7 +30,6 @@
 	var H = window.innerHeight;
 	canvas.width = W;
 	canvas.height = H;
-	var ctx = canvas.getContext("2d");
 
 	window.onresize = function () {
 		W = window.innerWidth;
@@ -87,8 +86,7 @@
     path.push(new Particles.shapes.ellipseArc(cx-138,cy-148.5,1250,413,0.935,1.887));
     path.push(new Particles.shapes.ellipseArc(cx+104.5,cy-56,549,266,-0.02,0.8));
     path.push(new Particles.shapes.ellipseArc(cx-28,cy-120.5,933,444,0.8,2.28));
-
-
+    
 	particlesLogo.setPath(path);
     particlesLogo.start();
 

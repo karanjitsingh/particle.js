@@ -16,7 +16,6 @@ var Particles =  function(canvas){
 	var W = canvas.width;
 	var H = canvas.height;
 	var timer;
-	var firstDraw = true;
 
 	ctx = canvas.getContext('2d');
 
@@ -24,7 +23,6 @@ var Particles =  function(canvas){
 	canvas.onmousemove = function(e) {
 		mouseX = e.clientX;
 		mouseY = e.clientY;
-		document.title = mouseX + "," + mouseY;
 	}
 
 	var particles = [];
@@ -64,9 +62,6 @@ var Particles =  function(canvas){
 				particles.push(p);
 			}
 		}
-
-
-		document.title=(particles.length);
 
 
 		paths.push(path);
@@ -121,13 +116,14 @@ var Particles =  function(canvas){
 
 };
 
-
+var rejected = 1;
+var accepted = 1;
 Particles.create_particle = function(i) {
 		this.i = i;
 		this.x = 0;
 		this.y = 0;
 
-		this.radius = 4;
+		this.radius = Particles.params.radius;
 		this.opacity = 1;
 
 		this.radiusLag = 1;
@@ -143,7 +139,6 @@ Particles.create_particle = function(i) {
 		this.animateOpacity = false;
 		this.originOpacity = 0;
 
-		this.assignedText = false;
 		this.animationDone = true;
 
 
@@ -156,12 +151,14 @@ Particles.create_particle = function(i) {
 			this.animate();
 
 			if (Particles.params.pop) {
-				if (this.radius < 2.001) {
-					this.radius += Math.random() * 4;
-					this.radiusLag = Math.random() * 12 + 12;
+				if (this.radius < 0.001 + Particles.params.radius) {
+					if(Math.random() < Particles.params.popRandomnessFactor) {
+						this.radius += Math.random() * (Particles.params.popRadius - Particles.params.radius);
+						this.radiusLag = Math.random() * 12 + 12;
+					}
 				}
 				else
-					this.radius += (2 - this.radius) / this.radiusLag;
+					this.radius += (Particles.params.radius - this.radius) / this.radiusLag;
 			}
 
 			if (this.animateOpacity)
@@ -170,15 +167,17 @@ Particles.create_particle = function(i) {
 
 			ctx.beginPath();
 
+			var popColors=Particles.params.popColors;
+
 			if (this.blurRadius == 0 || !Particles.animations.params.blur) {
-				ctx.fillStyle = HEXAtoRGBA(Particles.params.popColors[this.i % 3], this.opacity);
+				ctx.fillStyle = HEXAtoRGBA(popColors[this.i % popColors.length], this.opacity);
 				ctx.arc(this.x, this.y, this.radius, Math.PI * 2, false);
 			}
 			else {
 				var radgrad = ctx.createRadialGradient(this.x, this.y, this.radius, this.x, this.y, this.radius + this.blurRadius * 30);
 
-				radgrad.addColorStop(0, HEXAtoRGBA(Particles.params.popColors[this.i % 3], this.opacity));
-				radgrad.addColorStop(1, HEXAtoRGBA(Particles.params.popColors[this.i % 3], 0));
+				radgrad.addColorStop(0, HEXAtoRGBA(popColors[this.i % popColors.length], this.opacity));
+				radgrad.addColorStop(1, HEXAtoRGBA(popColors[this.i % popColors.length], 0));
 
 				ctx.fillStyle = radgrad;
 				ctx.arc(this.x, this.y, this.radius + this.blurRadius * 30, Math.PI * 2, false);
@@ -375,15 +374,18 @@ Particles.animations = {
 Particles.params = {
 		interval: 30,
 		pop: true,
-		popColors: ["#E04836", "#F39D41", "#DDDDDD", "#5696BC"],
-		radius: 4,
+		popColors: ["#ec1943"],//["#E04836", "#F39D41", "#DDDDDD", "#5696BC"],
+		radius: 2,
+		popRadius: 4,
+		popRandomnessFactor:0.001,
 		radiusVariation: 0,
 		randomness: 0,
-		lineDensity:0.3,
-		scale:0.5,
+		lineDensity:0.6,
+
+		scale:0.7,
 		canvas: {
 			drawBG: true,
-			BGColor: "#000",
+			BGColor: "#fff",
 		}
 	};
 
