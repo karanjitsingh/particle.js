@@ -21,8 +21,8 @@ var Particles =  function(canvas){
 
 
 	canvas.onmousemove = function(e) {
-		mouseX = e.clientX;
-		mouseY = e.clientY;
+		mouseX = e.layerX;
+		mouseY = e.layerY;
 	}
 
 	var particles = [];
