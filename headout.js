@@ -25,6 +25,11 @@ var Particles =  function(canvas){
 		mouseY = e.layerY;
 	}
 
+	canvas.onmouseout = function(e) {
+		mouseY = NaN;
+		mouseX = NaN;
+	}
+
 	var particles = [];
 
 	this.setPath = function(path) {
@@ -322,6 +327,10 @@ Particles.animations = {
                 posWRTMouse.x * posWRTMouse.x +
                 posWRTMouse.y * posWRTMouse.y
             );
+
+            if(isNaN(posWRTMouse.x) || isNaN(posWRTMouse.y)) {
+            	distance = 0;
+            } 
 
             var distance2 = Math.sqrt(
                 posWRTOrigin.x * posWRTOrigin.x +
