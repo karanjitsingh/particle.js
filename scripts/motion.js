@@ -4,7 +4,7 @@ var motion = {
 
     multiple: function(motions) {
         for(var i=0;i<motions.length;i++)
-            motions.[i]();
+            motions[i]();
     },
 
 	wave: function()
@@ -135,9 +135,5 @@ var motion = {
         else
             this.blurRadius = 0.4;
 	},
-
-	circleMotion: function(this) {
-
-	}
 
 };
