@@ -30,8 +30,28 @@
 
 </body>
 
+<script>
+
+Math.radians = function(radians) {
+	return radians * 180 / Math.PI;
+}
+
+var img = new Image();
+img.loaded = false;
+img.onload = function() {
+    img.loaded=true;
+}
+
+img.src = "./images/line.svg";
+</script>
+
 
 <script>
+
+window.onclick = function(e) {
+	document.title = (e.pageX -cx) + "," + (e.pageY - cy);
+}
+
     var canvas = document.getElementById("canvas");
     var code = document.getElementById("codes");
 	var W=window.innerWidth;
