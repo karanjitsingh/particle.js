@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<style>
+		html, body {
+			height: 100%;
+		}
+
+		body {
+			padding: 0px;
+			margin: 0px;
+			height: 100%;
+			background: #f5f5f5 url('./images/broken_noise.png') repeat;
+		}
+
+	</style>
+
+	<script type="text/javascript" src="src/particle.js"></script>
+</head>
+
+<body>
+	<canvas id="canvas" style="margin:0 auto 0 auto; position:absolute;top:0px;"></canvas>
+</body>
+
+
+<script>
+	var canvas = document.getElementById("canvas");
+	var W = window.innerWidth;
+	var H = window.innerHeight;
+	canvas.width = W;
+	canvas.height = H;
+
+	window.onresize = function () {
+		W = window.innerWidth;
+		H = window.innerHeight;
+		canvas.width = W;
+		canvas.height = H;
+	};
+
+	var particlesLogo = new Particles(canvas);
+	
+
+
+	var path = [];
+	var cx = W/2, cy = H/2;
+    path.push(new Particles.shapes.arc(cx - 359,cy -105,35,Math.PI*0.81,-Math.PI * 0.57));
+    path.push(new Particles.shapes.line(cx - 370,cy-139, cx -250,cy-149));
+    path.push(new Particles.shapes.line(cx -250,cy-149,cx-227,cy-111));
+    path.push(new Particles.shapes.arc(cx+190,cy+672,886,Math.PI*-0.6561,-1.6903));
+    path.push(new Particles.shapes.arc(cx+130,cy+153.4,364,-0.54*Math.PI,-0.8657));
+    path.push(new Particles.shapes.arc(cx+304.8,cy-58.4,89,Math.PI*-0.26,Math.PI * 0.234));
+    path.push(new Particles.shapes.line(cx-388,cy-86,cx-350,cy-28));
+    path.push(new Particles.shapes.line(cx-350,cy-28,cx-372,cy-7.5));
+    path.push(new Particles.shapes.line(cx-372,cy-7.5,cx-347,cy+19));
+    path.push(new Particles.shapes.line(cx-347,cy+19,cx -372.7,cy+23.2));
+    path.push(new Particles.shapes.arc(cx-373,cy+34.3,11,Math.PI*0.4,Math.PI *1.5));
+    path.push(new Particles.shapes.line(cx -369.7,cy+45,cx-343,cy+40));
+    path.push(new Particles.shapes.line(cx -359,cy+68,cx-343,cy+40));
+    path.push(new Particles.shapes.line(cx -335.4,cy+76,cx -359,cy+68));
+    path.push(new Particles.shapes.arc(cx+4.6,cy+168,11,-Math.PI,Math.PI));
+    path.push(new Particles.shapes.arc(cx+91.1,cy+160.8,11,-Math.PI,Math.PI));
+    path.push(new Particles.shapes.arc(cx+177.6,cy+153.8,11,-Math.PI,Math.PI));
+    path.push(new Particles.shapes.arc(cx -304.4,cy+106,43, Math.PI*1.14, Math.PI*1.238));
+    path.push(new Particles.shapes.line(cx-343.4,cy+87.7,cx-368,cy+139));
+    path.push(new Particles.shapes.arc(cx -334,cy+154,37 , Math.PI*0.5, Math.PI*1.136));
+    path.push(new Particles.shapes.line(cx-333,cy+191,cx-228.8,cy+181));
+    path.push(new Particles.shapes.arc(cx-228,cy+172,9,0.3,Math.PI*0.5));
+    path.push(new Particles.shapes.arc(cx-224,cy+139,18,-Math.PI*0.27,0.5));
+    path.push(new Particles.shapes.line(cx-231,cy+109,cx-211,cy+126));
+    path.push(new Particles.shapes.line(cx-219.3,cy+174.7,cx-208.2,cy+147.8));
+    path.push(new Particles.shapes.arc(cx+0,cy-563,711,Math.PI*0.5334, Math.PI*0.604));
+    path.push(new Particles.shapes.arc(cx-2,cy+169.5,38,Math.PI*0.44, Math.PI*0.79));
+    path.push(new Particles.shapes.line(cx-32,cy+192.7,cx-74,cy+143.4));
+    path.push(new Particles.shapes.arc(cx+183,cy+144,40,0.46,Math.PI*0.48));
+    path.push(new Particles.shapes.line(cx+6,cy+206.8,cx+185,cy+184));
+    path.push(new Particles.shapes.arc(cx+289,cy+149,57,Math.PI*1.15,Math.PI *1.31));
+    path.push(new Particles.shapes.arc(cx+170,cy-119.4,234.2,0.539,1.08));
+    path.push(new Particles.shapes.line(cx+218.6,cy+161.9,cx+238.4,cy+123));
+    path.push(new Particles.shapes.line(cx+257.2,cy+101.6,cx+280,cy+87.3));
+    path.push(new Particles.shapes.ellipseArc(cx+256.5,cy-28.5,331,160,4.6,-0.75));
+    path.push(new Particles.shapes.ellipseArc(cx+202,cy-47.5,377,206,4.6,-0.36));
+    path.push(new Particles.shapes.ellipseArc(cx+290,cy+222,1514,752,3.737,-1.715));
+    path.push(new Particles.shapes.ellipseArc(cx+320,cy+389,2006,997,3.999,-1.653));
+    path.push(new Particles.shapes.ellipseArc(cx+90,cy-92,597,250,0.26,1.07));
+    path.push(new Particles.shapes.ellipseArc(cx-138,cy-148.5,1250,413,0.935,1.887));
+    path.push(new Particles.shapes.ellipseArc(cx+104.5,cy-56,549,266,-0.02,0.8));
+    path.push(new Particles.shapes.ellipseArc(cx-28,cy-120.5,933,444,0.8,2.28));
+    
+	particlesLogo.setPath(path);
+    particlesLogo.start();
+
+
+</script>
+
+</html>
