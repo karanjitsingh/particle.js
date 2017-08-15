@@ -1,0 +1,13 @@
+{
+    "compilerOptions": {
+        "target": "ES5",
+        "outDir": "out",
+        "rootDir": "src",
+        "outFile": "out/particle.js",
+        "sourceMap": true
+    },
+    "exclude": [
+        "node_modules",
+        "**/node_modules/*"
+    ]
+}
