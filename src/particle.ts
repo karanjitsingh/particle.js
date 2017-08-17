@@ -2,7 +2,7 @@
 var mouseX = -100;
 var mouseY = -100;
 
-interface AnimationOptions {
+interface AtomDrawOptions {
     pop: true,
     popRadius: 4,
     popFrequency: 0.001,
@@ -11,17 +11,23 @@ interface AnimationOptions {
     radiusVariation: 0,
 }
 
-interface SVGAnimationOptions extends AnimationOptions {
+interface SVGDrawOptions extends AtomDrawOptions {
     pathVariation: 0,
     lineDensity: 0.6,
     scale: 1,
 }
 
-
 interface ParticleJSOptions {
     drawCanvasBackground: true,
     canvasBGColor: "#ffffff",
     animationInterval: 30
+    beforeDraw?: (ctx: CanvasRenderingContext2D) => void,
+    afterDraw?: (ctx: CanvasRenderingContext2D) => void
+}
+
+interface DrawObject {
+    draw(): void,
+    options: AtomDrawOptions,
 }
 
 function HEXAtoRGBA(hex, a) {
@@ -35,15 +41,19 @@ function HEXAtoRGBA(hex, a) {
 class Atom {
 
     private id: number;
-    private 
+    private pos: Point;
 }
 
-class AnimationObject {
+class SVGDrawObject implements DrawObject {
+
+    public options: AtomDrawOptions;
+    public draw() {
+
+    }
 
 }
 
 class ParticleJS {
-
     private ctx: CanvasRenderingContext2D;
     private paths;
     private W: number;
@@ -51,6 +61,7 @@ class ParticleJS {
     private timer: number;
     private particles: Array<Atom>;
     private options: ParticleJSOptions;
+    private DrawObjectCollection: Array<DrawObject>;
 
     constructor(canvas: HTMLCanvasElement, options?: ParticleJSOptions) {
         this.W = canvas.width;
@@ -71,8 +82,36 @@ class ParticleJS {
 
         this.particles = [];
     }
+
+    public draw() {
+        if(this.options.beforeDraw)
+            this.options.beforeDraw(this.ctx);
+
+        if(this.options.drawCanvasBackground) {
+            this.ctx.fillStyle = this.options.canvasBGColor;
+            this.ctx.fillRect(0, 0, this.W, this.H);
+        }
+        else
+            this.ctx.clearRect(0, 0, this.W, this.H);
+
+        for(var i=0;i<this.DrawObjectCollection.length;i++)
+            this.DrawObjectCollection[i].draw();
+
+        if(this.options.afterDraw)
+            this.options.afterDraw(this.ctx);
+    }
+
+    public start() {
+        this.timer = setInterval(this.draw.bind(this), this.options.animationInterval);
+    }
+
+
+    public stop() {
+        clearTimeout(this.timer);
+    }
 }
 
+/*
 var Particles = function (canvas) {
 
 
@@ -131,38 +170,8 @@ var Particles = function (canvas) {
         }
     }
 
-    this.draw = function () {
-
-        var scale = 1 - Particles.params.scale;
-        scale /= 2;
-
-
-        if (Particles.params.canvas.drawBG == true) {
-            ctx.fillStyle = Particles.params.canvas.BGColor;
-            ctx.fillRect(0, 0, W, H);
-        }
-        else
-            ctx.clearRect(0, 0, W, H);
-
-
-        for (var i = 0; i < particles.length; i++) {
-            var p = particles[i];
-            p.draw();
-        }
-
-    }
-
-    this.start = function () {
-        timer = setInterval(this.draw.bind(this), Particles.params.interval);
-    }
-
-
-    this.stop = function () {
-        clearTimeout(timer);
-    }
-
-
 };
+*/
 
 Particles.create_particle = function (i) {
     this.i = i;

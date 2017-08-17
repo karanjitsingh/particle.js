@@ -1,0 +1,3 @@
+[submodule "src/svg-path-parser"]
+	path = src/svg-path-parser
+	url = https://github.com/karanjitsingh/svg-path-parser
