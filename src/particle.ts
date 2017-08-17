@@ -1,6 +1,28 @@
+
 var mouseX = -100;
 var mouseY = -100;
 
+interface AnimationOptions {
+    pop: true,
+    popRadius: 4,
+    popFrequency: 0.001,
+    colorSet: ["#ec1943"],//["#E04836", "#F39D41", "#DDDDDD", "#5696BC"],
+    particleRadius: 2,
+    radiusVariation: 0,
+}
+
+interface SVGAnimationOptions extends AnimationOptions {
+    pathVariation: 0,
+    lineDensity: 0.6,
+    scale: 1,
+}
+
+
+interface ParticleJSOptions {
+    drawCanvasBackground: true,
+    canvasBGColor: "#ffffff",
+    animationInterval: 30
+}
 
 function HEXAtoRGBA(hex, a) {
     hex = hex.substring(1, 7);
@@ -12,6 +34,12 @@ function HEXAtoRGBA(hex, a) {
 
 class Atom {
 
+    private id: number;
+    private 
+}
+
+class AnimationObject {
+
 }
 
 class ParticleJS {
@@ -21,35 +49,32 @@ class ParticleJS {
     private W: number;
     private H: number;
     private timer: number;
+    private particles: Array<Atom>;
+    private options: ParticleJSOptions;
 
-    constructor(canvas: HTMLCanvasElement) {
+    constructor(canvas: HTMLCanvasElement, options?: ParticleJSOptions) {
         this.W = canvas.width;
         this.H = canvas.height;
         this.paths = [];
         this.ctx = canvas.getContext('2d');
+        this.options = options;
+
+        canvas.onmousemove = function (e) {
+            mouseX = e.layerX;
+            mouseY = e.layerY;
+        }
+    
+        canvas.onmouseout = function (e) {
+            mouseY = NaN;
+            mouseX = NaN;
+        }
+
+        this.particles = [];
     }
 }
 
 var Particles = function (canvas) {
-    var paths = [];
-    var W = canvas.width;
-    var H = canvas.height;
-    var timer;
 
-    ctx = canvas.getContext('2d');
-
-
-    canvas.onmousemove = function (e) {
-        mouseX = e.layerX;
-        mouseY = e.layerY;
-    }
-
-    canvas.onmouseout = function (e) {
-        mouseY = NaN;
-        mouseX = NaN;
-    }
-
-    var particles = [];
 
     this.setPath = function (path) {
         var scale = 1 - Particles.params.scale;

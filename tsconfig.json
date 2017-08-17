@@ -4,7 +4,8 @@
         "outDir": "out",
         "rootDir": "src",
         "outFile": "out/particle.js",
-        "sourceMap": true
+        "sourceMap": true,
+        "module": "system"
     },
     "exclude": [
         "node_modules",
