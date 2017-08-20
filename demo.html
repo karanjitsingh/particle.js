@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Title</title>
+	<style>
+		body, html {
+			padding: 0;
+			margin: 0;
+			height: 100%;
+		}
+	</style>
+</head>
+<body>
+	<canvas id="canvas"></canvas>
+</body>
+<script src="./out/particle.js"></script>
+<script type="text/javascript">
+
+
+
+var canvas = document.getElementById("canvas");
+
+canvas.width = document.body.clientWidth;
+canvas.height = document.body.clientHeight;
+
+var pjs = new ParticleJS(canvas);
+
+var d = `M100,350 l 50,-25
+a25,25 -30 0,1 50,-25 l 50,-25
+a25,50 -30 0,1 50,-25 l 50,-25
+a25,75 -30 0,1 50,-25 l 50,-25
+a25,100 -30 0,1 50,-25 l 50,-25`;
+
+var svg = new ParticleJSAnimations.ExplodingSVG(d);
+
+pjs.addDrawObject(svg);
+
+pjs.start();
+
+</script>
+</html>

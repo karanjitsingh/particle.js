@@ -1,7 +1,784 @@
-var ParticleJS = (function () {
-    function ParticleJS(canvas) {
-        var a;
+/* TODO
+ * options taking default values
+ * test all options
+ */
+var ParticleJSAnimations;
+(function (ParticleJSAnimations) {
+    var ExplodingSVG = (function () {
+        function ExplodingSVG(path2d, options) {
+            if (options === void 0) { options = ExplodingSVG.default; }
+            this.offset = { x: 0, y: 0 };
+            this.atomSet = [];
+            this.options = options;
+            var path = (new SVGPath(path2d)).paths;
+            this.GeneratePathObjects(path);
+            this.GenerateAtomSet();
+        }
+        ExplodingSVG.prototype.GeneratePathObjects = function (path) {
+            this.pathObjects = [];
+            var ctx;
+            for (var i = 0; i < path.length; i++) {
+                switch (path[i].f) {
+                    case CanvasCommand.Line:
+                        this.pathObjects.push(new ExplodingSVG.Shapes.Line(path[i].from.x, path[i].from.y, path[i].args[0], path[i].args[1], this.options.scale));
+                        break;
+                    case CanvasCommand.EllipticalArc:
+                        var args = path[i].args;
+                        var pos = path[i - 3].args;
+                        var rotate = path[i - 2].args[0];
+                        var size = path[i - 1].args;
+                        var angle = path[i].args;
+                        this.pathObjects.push(new ExplodingSVG.Shapes.Arc(pos[0], pos[1], size[0] * 2, size[1] * 2, angle[3], angle[4], rotate, this.options.scale));
+                        break;
+                }
+            }
+        };
+        ExplodingSVG.prototype.GenerateAtomSet = function () {
+            var density = this.options.lineDensity;
+            var length = 0;
+            for (var i = 0; i < this.pathObjects.length; i++)
+                length += this.pathObjects[i].length;
+            for (var i = 0; i < this.pathObjects.length; i++) {
+                var bpl = Math.floor(this.pathObjects[i].length * density);
+                for (var j = 0; j < bpl; j++) {
+                    var options;
+                    var pos = this.pathObjects[i].nthPoint(j / bpl);
+                    var atom = new Atom(j, { x: 0, y: 0 }, {
+                        x: this.options.pathVariation * (0.5 - Math.random()) + pos.x,
+                        y: this.options.pathVariation * (0.5 - Math.random()) + pos.y
+                    }, 1);
+                    this.atomSet.push(atom);
+                }
+            }
+        };
+        ExplodingSVG.prototype.draw = function (context) {
+            var mouse = context.mousePosition;
+            for (var i = 0, atom = this.atomSet[i]; i < this.atomSet.length; i++, atom = this.atomSet[i]) {
+                atom.pos.x += atom.speed.x;
+                atom.pos.y += atom.speed.y;
+                if (!atom.animationDone) {
+                    atom.pos.x += (atom.origin.x - atom.pos.x) / 2;
+                    atom.pos.y += (atom.origin.y - atom.pos.y) / 2;
+                    if (Math.abs(atom.pos.x - atom.origin.x) < 0.1 && Math.abs(atom.pos.y - atom.origin.y) < 0.1) {
+                        atom.animationDone = true;
+                    }
+                }
+                var posWRTMouse = {
+                    x: atom.pos.x - mouse.x,
+                    y: atom.pos.y - mouse.y
+                };
+                var posWRTOrigin = {
+                    x: atom.pos.x - atom.origin.x,
+                    y: atom.pos.y - atom.origin.y
+                };
+                var distance = Math.sqrt(posWRTMouse.x * posWRTMouse.x +
+                    posWRTMouse.y * posWRTMouse.y);
+                if (isNaN(posWRTMouse.x) || isNaN(posWRTMouse.y)) {
+                    distance = 0;
+                }
+                var distance2 = Math.sqrt(posWRTOrigin.x * posWRTOrigin.x +
+                    posWRTOrigin.y * posWRTOrigin.y);
+                var forceDirection = {
+                    x: distance != 0 ? posWRTMouse.x / distance : 0,
+                    y: distance != 0 ? posWRTMouse.y / distance : 0
+                };
+                var gravityDirection = {
+                    x: distance2 != 0 ? posWRTOrigin.x / distance2 : 0,
+                    y: distance2 != 0 ? posWRTOrigin.y / distance2 : 0
+                };
+                var force = (this.options.maxRepelDistance - distance) / this.options.maxRepelDistance;
+                var gravity = -distance2 / this.options.gravity;
+                gravity = Math.abs(gravity) > 0.1 ? -0.1 : gravity;
+                if (force < 0)
+                    force = 0;
+                if (isNaN(atom.speed.x))
+                    atom.speed.x = 0;
+                if (isNaN(atom.speed.y))
+                    atom.speed.y = 0;
+                atom.speed.x += forceDirection.x * force * context.options.animationInterval / this.options.forceFactor + gravityDirection.x * gravity * context.options.animationInterval;
+                atom.speed.y += forceDirection.y * force * context.options.animationInterval / this.options.forceFactor + gravityDirection.y * gravity * context.options.animationInterval;
+                atom.speed.y *= this.options.frictionFactor;
+                atom.speed.x *= this.options.frictionFactor;
+                if (distance2 <= this.options.minBlurDistance)
+                    atom.blurRadius = 0;
+                else if (distance2 <= this.options.maxRepelDistance)
+                    atom.blurRadius = (distance2 - this.options.minBlurDistance) / this.options.marginBlurDistance * 0.4;
+                else
+                    atom.blurRadius = 0.4;
+                atom.draw(context);
+            }
+        };
+        ExplodingSVG.default = {
+            atomOptions: {
+                pop: true,
+                popRadius: 4,
+                popProbability: 1000,
+                radius: 2,
+                colorSet: ["#E04836", "#F39D41", "#DDDDDD", "#5696BC"],
+                particleRadius: 2,
+                radiusVariation: 0,
+            },
+            pathVariation: 0,
+            lineDensity: 0.5,
+            scale: 0.1,
+            blur: false,
+            forceFactor: 10,
+            maxRepelDistance: 100,
+            minBlurDistance: 50,
+            maxBlurDistance: 200,
+            marginBlurDistance: 75,
+            gravity: 1000,
+            frictionFactor: 0.9
+        };
+        ExplodingSVG.Shapes = (_a = (function () {
+                function class_1() {
+                    this.BezierCurve = (function () {
+                        function class_2(x1, y1, x2, y2, x, y) {
+                        }
+                        class_2.prototype.nthPoint = function (n) {
+                            return;
+                        };
+                        return class_2;
+                    }());
+                    this.QuadraticCurve = (function () {
+                        function class_3(x, y, r, sa, ea) {
+                        }
+                        class_3.prototype.nthPoint = function (n) {
+                            return;
+                        };
+                        return class_3;
+                    }());
+                }
+                return class_1;
+            }()),
+            _a.Line = (function () {
+                function class_4(x1, y1, x2, y2, scale) {
+                    var theta;
+                    x1 = x1 < x2 ? x1 : x2;
+                    x2 = x1 < x2 ? x2 : x1;
+                    y1 = x1 < x2 ? y1 : y2;
+                    y2 = x1 < x2 ? y2 : y1;
+                    x1 *= scale;
+                    y1 *= scale;
+                    x2 *= scale;
+                    y2 *= scale;
+                    if (x1 - x2 != 0)
+                        theta = Math.atan((y1 - y2) / (x1 - x2));
+                    else
+                        theta = Math.PI / 2;
+                    this.length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+                    this.ck = this.length * Math.cos(theta);
+                    this.sk = this.length * Math.sin(theta);
+                    this.start = {
+                        x: x1,
+                        y: y1
+                    };
+                }
+                class_4.prototype.nthPoint = function (n) {
+                    return { x: this.start.x + n * this.ck, y: this.start.y + n * this.sk };
+                };
+                return class_4;
+            }()),
+            _a.Arc = (function () {
+                function class_5(x, y, w, h, sa, ea, phi, scale) {
+                    this.x = x * scale,
+                        this.y = y * scale,
+                        this.w = w * scale,
+                        this.h = h * scale;
+                    this.sa = sa;
+                    this.ea = ea;
+                    this.theta = this.ea - this.sa;
+                    this.phi = phi;
+                    if (this.theta < 0)
+                        this.theta = (2 * Math.PI + this.theta);
+                    this.length = (1.111 * (Math.sqrt(Math.pow(this.w / 2 * (Math.cos(this.sa) - Math.cos(this.ea)), 2) +
+                        Math.pow(this.h / 2 * (Math.sin(this.sa) - Math.sin(this.ea)), 2))));
+                }
+                class_5.prototype.nthPoint = function (n) {
+                    var _this = this;
+                    function rotate(cx, cy, p, theta) {
+                        var pPrime = { x: 0, y: 0 };
+                        pPrime.x = (p.x - cx) * Math.cos(theta) - (p.y - cy) * Math.sin(theta) + cx;
+                        pPrime.y = (p.x - cx) * Math.sin(theta) + (p.y - cy) * Math.cos(theta) + cy;
+                        return pPrime;
+                    }
+                    var getPoint = function (n) {
+                        return {
+                            x: _this.x + _this.w / 2 * Math.cos(_this.sa + n * _this.theta),
+                            y: _this.y + _this.h / 2 * Math.sin(_this.sa + n * _this.theta)
+                        };
+                    };
+                    return this.phi ? rotate(this.x, this.y, getPoint(n), this.phi) : getPoint(n);
+                };
+                return class_5;
+            }()),
+            _a);
+        return ExplodingSVG;
+        var _a;
+    }());
+    ParticleJSAnimations.ExplodingSVG = ExplodingSVG;
+})(ParticleJSAnimations || (ParticleJSAnimations = {}));
+function HEXAtoRGBA(hex, a) {
+    hex = hex.substring(1, 7);
+    return "rgba(" + parseInt(hex.substr(0, 2), 16) +
+        "," + parseInt(hex.substr(2, 2), 16) +
+        "," + parseInt(hex.substr(4, 2), 16) +
+        "," + a + ")";
+}
+// interface AtomDrawOptions {
+//     pop: true,
+//     popRadius: 4,
+//     popProbability: 0.001,
+//     radius: 2,
+//     colorSet: ["#E04836", "#F39D41", "#DDDDDD", "#5696BC"],
+//     particleRadius: 2,
+//     radiusVariation: 0,
+// }
+// interface ParticleJSOptions {
+//     drawCanvasBackground: true,
+//     canvasBGColor: "#ffffff",
+//     animationInterval: 30
+//     beforeDraw?: (ctx: CanvasRenderingContext2D) => void,
+//     afterDraw?: (ctx: CanvasRenderingContext2D) => void
+// }
+var Atom = (function () {
+    function Atom(id, speed, position, opacity, options) {
+        if (options === void 0) { options = Atom.default; }
+        this.animationDone = true;
+        this.blurRadius = 0;
+        // No idea what to do with these
+        this.radiusLag = 1;
+        this.e = 0.8;
+        this.animateOpacity = true;
+        this.id = id;
+        this.options = options;
+        this.radius = this._radius = this.options.radius;
+        this.opacity = this._opacity = opacity || 1;
+        this.speed = speed || { x: 0, y: 0 };
+        this.pos = position ? { x: position.x, y: position.y } : { x: 0, y: 0 };
+        this.origin = position ? { x: position.x, y: position.y } : { x: 0, y: 0 };
     }
+    Atom.prototype.draw = function (context) {
+        var ctx = context.canvasContext;
+        if (this.options.pop) {
+            if (this.radius < 0.001 + this.options.radius) {
+                if (Math.random() < this.options.popProbability) {
+                    this.radius += Math.random() * (this.options.popRadius - this.options.radius);
+                    this.radiusLag = Math.random() * 12 + 12;
+                }
+            }
+            else
+                this.radius += (this.options.radius - this.radius) / this.radiusLag;
+        }
+        if (this.animateOpacity)
+            this.opacity += (this._opacity - this.opacity) / 6;
+        ctx.beginPath();
+        var colorSet = this.options.colorSet;
+        // if (this.blurRadius == 0 || !Particles.animations.params.blur) {
+        ctx.fillStyle = HEXAtoRGBA(colorSet[this.id % colorSet.length], this.opacity);
+        ctx.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI * 2);
+        // }
+        // else {
+        //     var radgrad = ctx.createRadialGradient(this.x, this.y, this.radius, this.x, this.y, this.radius + this.blurRadius * 30);
+        //     radgrad.addColorStop(0, HEXAtoRGBA(popColors[this.i % popColors.length], this.opacity));
+        //     radgrad.addColorStop(1, HEXAtoRGBA(popColors[this.i % popColors.length], 0));
+        //     ctx.fillStyle = radgrad;
+        //     ctx.arc(this.x, this.y, this.radius + this.blurRadius * 30, Math.PI * 2, false);
+        // }
+        ctx.fill();
+        ctx.closePath();
+    };
+    Atom.default = {
+        pop: true,
+        popRadius: 4,
+        popProbability: 0.001,
+        radius: 2,
+        colorSet: ["#E04836", "#F39D41", "#DDDDDD", "#5696BC"],
+        particleRadius: 2,
+        radiusVariation: 0,
+    };
+    return Atom;
+}());
+var ParticleJS = (function () {
+    function ParticleJS(canvas, drawObjectCollection, options) {
+        if (options === void 0) { options = ParticleJS.default; }
+        var _this = this;
+        this.mouse = {
+            x: NaN,
+            y: NaN
+        };
+        this.W = canvas.width;
+        this.H = canvas.height;
+        this.paths = [];
+        this.ctx = canvas.getContext('2d');
+        this.options = options;
+        this.DrawObjectCollection = drawObjectCollection || [];
+        canvas.onmousemove = function (e) {
+            _this.mouse.x = e.layerX;
+            _this.mouse.y = e.layerY;
+        };
+        canvas.onmouseout = function (e) {
+            _this.mouse.x = NaN;
+            _this.mouse.y = NaN;
+        };
+        this.particles = [];
+    }
+    ParticleJS.prototype.addDrawObject = function (drawObject) {
+        this.DrawObjectCollection.push(drawObject);
+    };
+    ParticleJS.prototype.draw = function () {
+        if (this.options.beforeDraw)
+            this.options.beforeDraw(this.ctx);
+        if (this.options.drawCanvasBackground) {
+            this.ctx.fillStyle = this.options.canvasBGColor;
+            this.ctx.fillRect(0, 0, this.W, this.H);
+        }
+        else
+            this.ctx.clearRect(0, 0, this.W, this.H);
+        for (var i = 0; i < this.DrawObjectCollection.length; i++)
+            this.DrawObjectCollection[i].draw({
+                canvasContext: this.ctx,
+                mousePosition: this.mouse,
+                canvasHeight: this.H,
+                canvasWidth: this.W,
+                options: this.options
+            });
+        if (this.options.afterDraw)
+            this.options.afterDraw(this.ctx);
+    };
+    ParticleJS.prototype.start = function () {
+        this.timer = setInterval(this.draw.bind(this), this.options.animationInterval);
+    };
+    ParticleJS.prototype.stop = function () {
+        clearTimeout(this.timer);
+    };
+    ParticleJS.default = {
+        drawCanvasBackground: true,
+        canvasBGColor: "#ffffff",
+        animationInterval: 30
+    };
     return ParticleJS;
+}());
+var CanvasCommand;
+(function (CanvasCommand) {
+    CanvasCommand["Move"] = "moveTo";
+    CanvasCommand["Line"] = "lineTo";
+    CanvasCommand["BezierCurve"] = "bezierCurveTo";
+    CanvasCommand["QuadraticCurve"] = "quadraticCurveTo";
+    CanvasCommand["EllipticalArc"] = "arc";
+    CanvasCommand["Save"] = "save";
+    CanvasCommand["Translate"] = "translate";
+    CanvasCommand["Rotate"] = "rotate";
+    CanvasCommand["Scale"] = "scale";
+    CanvasCommand["Restore"] = "restore";
+    CanvasCommand["ClosePath"] = "closePath";
+})(CanvasCommand || (CanvasCommand = {}));
+var RegexPatterns;
+(function (RegexPatterns) {
+    RegexPatterns[RegexPatterns["Num"] = 0] = "Num";
+    RegexPatterns[RegexPatterns["Flag"] = 1] = "Flag";
+    RegexPatterns[RegexPatterns["WS"] = 2] = "WS";
+    RegexPatterns[RegexPatterns["Commands"] = 3] = "Commands";
+})(RegexPatterns || (RegexPatterns = {}));
+var SVGPath = (function () {
+    function SVGPath(d) {
+        this.paths = [];
+        this.parseError = false;
+        this.paths = this.ParsePath2D(d);
+    }
+    SVGPath.relToAbs = function (rel, args) {
+        for (var i = 0; i < args.length; i++)
+            args[i] += i % 2 == 0 ? rel.x : rel.y;
+    };
+    SVGPath.prototype.ParsePath2D = function (d) {
+        var match;
+        var commandList = [];
+        var pathList = [];
+        var matchPattern = function (p, flags) {
+            var m;
+            if ((m = d.match(new RegExp("^" + SVGPath.Patterns[p], flags))) !== null) {
+                d = d.substr(m[0].length);
+                parserPos += m[0].length;
+                match = m;
+            }
+            else if ((m = d.match(new RegExp("^" + SVGPath.Patterns[RegexPatterns.Num], flags))) !== null) {
+                match = [commandList[commandList.length - 1].command];
+            }
+            else
+                match = null;
+            return match !== null;
+        };
+        var p = "";
+        var parserPos = 0;
+        var ctxPos = {
+            x: 0,
+            y: 0
+        };
+        var drawOrigin = {
+            x: 0,
+            y: 0
+        };
+        while (d.length > 0) {
+            matchPattern(RegexPatterns.WS);
+            if (matchPattern(RegexPatterns.Commands)) {
+                var cmd = match[0];
+                var relative = cmd.toLowerCase() === cmd;
+                var signature = SVGPath.Signatures[cmd.toUpperCase()];
+                var pattern = signature.regexPattern;
+                var _args = null;
+                p += " " + cmd;
+                var svgCmd = {
+                    command: match[0],
+                    args: [],
+                };
+                var canvasCmd = {
+                    f: signature.canvasCommand,
+                    args: [],
+                    from: {
+                        x: 0,
+                        y: 0
+                    }
+                };
+                for (var i = 0; i < pattern.length; i++) {
+                    matchPattern(RegexPatterns.WS);
+                    if (matchPattern(pattern[i])) {
+                        svgCmd.args.push(pattern[i] === RegexPatterns.Num ? parseFloat(match[0]) : parseInt(match[0]));
+                    }
+                    else {
+                        this.parseError = true;
+                        console.error("Error parsing svg path at " + parserPos);
+                        return pathList;
+                    }
+                }
+                p += " " + svgCmd.args.join(" ");
+                if (pathList.length > 1 && ((cmd.toUpperCase() == "S" && "cCsS".indexOf(commandList[commandList.length - 1].command) !== -1) || (cmd.toUpperCase() == "T" && "qQtT".indexOf(commandList[commandList.length - 1].command) !== -1))) {
+                    _args = pathList[pathList.length - 1].args;
+                }
+                commandList.push(svgCmd);
+                pathList.push.apply(pathList, signature.toCanvas(ctxPos, relative, cmd.toUpperCase() == "Z" ? [drawOrigin.x, drawOrigin.y] : svgCmd.args, _args));
+                if (cmd.toUpperCase() == "M") {
+                    drawOrigin.x = pathList[pathList.length - 1].args[0];
+                    drawOrigin.y = pathList[pathList.length - 1].args[1];
+                }
+            }
+            else if (d.length > 0) {
+                this.parseError = true;
+                console.error("Error parsing svg path at " + parserPos);
+                break;
+            }
+        }
+        return pathList;
+    };
+    SVGPath.parseEllipticalArc = function (x1, r, phi, fA, fS, x2) {
+        function mag(v) {
+            return Math.sqrt(Math.pow(v.x, 2) + Math.pow(v.y, 2));
+        }
+        function dot(u, v) {
+            return (u.x * v.x + u.y * v.y);
+        }
+        function ratio(u, v) {
+            return dot(u, v) / (mag(u) * mag(v));
+        }
+        function clamp(value, min, max) {
+            return Math.min(Math.max(value, min), max);
+        }
+        function angle(u, v) {
+            var sign = 1.0;
+            if ((u.x * v.y - u.y * v.x) < 0) {
+                sign = -1.0;
+            }
+            return sign * Math.acos(clamp(ratio(u, v), -1, 1));
+        }
+        function rotClockwise(v, angle) {
+            var cost = Math.cos(angle);
+            var sint = Math.sin(angle);
+            return { x: cost * v.x + sint * v.y, y: -1 * sint * v.x + cost * v.y };
+        }
+        function rotCounterClockwise(v, angle) {
+            var cost = Math.cos(angle);
+            var sint = Math.sin(angle);
+            return { x: cost * v.x - sint * v.y, y: sint * v.x + cost * v.y };
+        }
+        function midPoint(u, v) {
+            return { x: (u.x - v.x) / 2.0, y: (u.y - v.y) / 2.0 };
+        }
+        function meanVec(u, v) {
+            return { x: (u.x + v.x) / 2.0, y: (u.y + v.y) / 2.0 };
+        }
+        function pointMul(u, v) {
+            return { x: u.x * v.x, y: u.y * v.y };
+        }
+        function scale(c, v) {
+            return { x: c * v.x, y: c * v.y };
+        }
+        function sum(u, v) {
+            return { x: u.x + v.x, y: u.y + v.y };
+        }
+        // Convert from endpoint to center parametrization, as detailed in:
+        //   http://www.w3.org/TR/SVG/implnote.html#ArcImplementationNotes
+        if (r.x == 0 || r.y == 0) {
+            var from = { x: x1.x, y: x1.y };
+            return [{ f: CanvasCommand.Line, args: [x2.x, x2.y], from: from }];
+        }
+        var phi = phi * (Math.PI / 180.0);
+        r.x = Math.abs(r.x);
+        r.y = Math.abs(r.y);
+        var xPrime = rotClockwise(midPoint(x1, x2), phi); // F.6.5.1
+        var xPrime2 = pointMul(xPrime, xPrime);
+        var r2 = { x: Math.pow(r.x, 2), y: Math.pow(r.y, 2) };
+        var lambda = Math.sqrt(xPrime2.x / r2.x + xPrime2.y / r2.y);
+        if (lambda > 1) {
+            r.x *= lambda;
+            r.y *= lambda;
+            r2.x = Math.pow(r.x, 2);
+            r2.y = Math.pow(r.y, 2);
+        }
+        var factor = Math.sqrt(Math.abs(r2.x * r2.y - r2.x * xPrime2.y - r2.y * xPrime2.x) / (r2.x * xPrime2.y + r2.y * xPrime2.x));
+        if (fA == fS) {
+            factor *= -1.0;
+        }
+        var cPrime = scale(factor, { x: r.x * xPrime.y / r.y, y: -r.y * xPrime.x / r.x }); // F.6.5.2
+        var c = sum(rotCounterClockwise(cPrime, phi), meanVec(x1, x2)); // F.6.5.3
+        var x1UnitVector = { x: (xPrime.x - cPrime.x) / r.x, y: (xPrime.y - cPrime.y) / r.y };
+        var x2UnitVector = { x: (-1.0 * xPrime.x - cPrime.x) / r.x, y: (-1.0 * xPrime.y - cPrime.y) / r.y };
+        var theta = angle({ x: 1, y: 0 }, x1UnitVector); // F.6.5.5
+        var deltaTheta = angle(x1UnitVector, x2UnitVector); // F.6.5.6
+        var start = theta;
+        var end = theta + deltaTheta;
+        return [
+            { f: CanvasCommand.Save, args: [], from: from },
+            { f: CanvasCommand.Translate, args: [c.x, c.y], from: from },
+            { f: CanvasCommand.Rotate, args: [phi], from: from },
+            { f: CanvasCommand.Scale, args: [r.x, r.y], from: from },
+            { f: CanvasCommand.EllipticalArc, args: [0, 0, 1, start, end, 1 - fS], from: from },
+            { f: CanvasCommand.Restore, args: [], from: from }
+        ];
+    };
+    SVGPath.prototype.draw = function (ctx) {
+        for (var i = 0; i < this.paths.length; i++) {
+            ctx[this.paths[i].f].apply(ctx, this.paths[i].args);
+        }
+    };
+    SVGPath.Patterns = ["(-?(?:[0-9]*)?(?:[.])?[0-9]+)", "([01])", "(?:[,]|[\n \t]*)?", "([MmLlHhVvCcSsQqTtAaZz])"];
+    SVGPath.Signatures = {
+        // Mm (x y)+
+        "M": {
+            toCanvas: function (pos, relative, args) {
+                var args = args.slice();
+                if (relative)
+                    SVGPath.relToAbs(pos, args);
+                var from = {
+                    x: pos.x,
+                    y: pos.y
+                };
+                pos.x = args[0];
+                pos.y = args[1];
+                return [{
+                        f: CanvasCommand.Move,
+                        args: args,
+                        from: from
+                    }];
+            },
+            regexPattern: [RegexPatterns.Num, RegexPatterns.Num]
+        },
+        // Ll (x y)+
+        "L": {
+            toCanvas: function (pos, relative, args) {
+                var args = args.slice();
+                if (relative)
+                    SVGPath.relToAbs(pos, args);
+                var from = {
+                    x: pos.x,
+                    y: pos.y
+                };
+                pos.x = args[0];
+                pos.y = args[1];
+                return [{
+                        f: CanvasCommand.Line,
+                        args: args,
+                        from: from
+                    }];
+            },
+            regexPattern: [RegexPatterns.Num, RegexPatterns.Num]
+        },
+        // Hh x+
+        "H": {
+            toCanvas: function (pos, relative, args) {
+                var args = args.slice();
+                if (relative)
+                    args[0] += pos.x;
+                args.push(pos.y);
+                var from = {
+                    x: pos.x,
+                    y: pos.y
+                };
+                pos.x = args[0];
+                pos.y = pos.y;
+                return [{
+                        f: CanvasCommand.Line,
+                        args: args,
+                        from: from
+                    }];
+            },
+            regexPattern: [RegexPatterns.Num],
+        },
+        // Vv y+
+        "V": {
+            toCanvas: function (pos, relative, args) {
+                var args = args.slice();
+                args.unshift(pos.x);
+                if (relative)
+                    args[1] += pos.y;
+                var from = {
+                    x: pos.x,
+                    y: pos.y
+                };
+                pos.x = pos.x;
+                pos.y = args[1];
+                return [{
+                        f: CanvasCommand.Line,
+                        args: args,
+                        from: from
+                    }];
+            },
+            regexPattern: [RegexPatterns.Num],
+        },
+        // Cc (x1 y1 x2 y2 x y)+
+        "C": {
+            toCanvas: function (pos, relative, args) {
+                var args = args.slice();
+                if (relative)
+                    SVGPath.relToAbs(pos, args);
+                var from = {
+                    x: pos.x,
+                    y: pos.y
+                };
+                pos.x = args[4];
+                pos.y = args[5];
+                return [{
+                        f: CanvasCommand.BezierCurve,
+                        args: args,
+                        from: from
+                    }];
+            },
+            regexPattern: [RegexPatterns.Num, RegexPatterns.Num, RegexPatterns.Num, RegexPatterns.Num, RegexPatterns.Num, RegexPatterns.Num],
+        },
+        // Ss (x2 y2 x y)+
+        "S": {
+            toCanvas: function (pos, relative, args, _args) {
+                var args = args.slice();
+                if (relative)
+                    SVGPath.relToAbs(pos, args);
+                var cp1 = {
+                    x: pos.x,
+                    y: pos.y
+                };
+                if (_args) {
+                    cp1.x = 2 * pos.x - _args[2];
+                    cp1.y = 2 * pos.y - _args[3];
+                }
+                args.unshift(cp1.y);
+                args.unshift(cp1.x);
+                var from = {
+                    x: pos.x,
+                    y: pos.y
+                };
+                pos.x = args[4];
+                pos.y = args[5];
+                return [{
+                        f: CanvasCommand.BezierCurve,
+                        args: args,
+                        from: from
+                    }];
+            },
+            regexPattern: [RegexPatterns.Num, RegexPatterns.Num, RegexPatterns.Num, RegexPatterns.Num],
+        },
+        // Qq (x1 y1 x y)+
+        "Q": {
+            toCanvas: function (pos, relative, args) {
+                var args = args.slice();
+                if (relative)
+                    SVGPath.relToAbs(pos, args);
+                var from = {
+                    x: pos.x,
+                    y: pos.y
+                };
+                pos.x = args[2];
+                pos.y = args[3];
+                return [{
+                        f: CanvasCommand.QuadraticCurve,
+                        args: args,
+                        from: from
+                    }];
+            },
+            regexPattern: [RegexPatterns.Num, RegexPatterns.Num, RegexPatterns.Num, RegexPatterns.Num],
+        },
+        // Tt (x y)+
+        "T": {
+            toCanvas: function (pos, relative, args, _args) {
+                var args = args.slice();
+                if (relative)
+                    SVGPath.relToAbs(pos, args);
+                var cp1 = {
+                    x: pos.x,
+                    y: pos.y
+                };
+                if (_args) {
+                    cp1.x = 2 * pos.x - _args[0];
+                    cp1.y = 2 * pos.y - _args[1];
+                }
+                args.unshift(cp1.y);
+                args.unshift(cp1.x);
+                var from = {
+                    x: pos.x,
+                    y: pos.y
+                };
+                pos.x = args[2];
+                pos.y = args[3];
+                return [{
+                        f: CanvasCommand.QuadraticCurve,
+                        args: args,
+                        from: from
+                    }];
+            },
+            regexPattern: [RegexPatterns.Num, RegexPatterns.Num],
+        },
+        // Aa (r.x r.y x-axis-rotation large-arc-flag sweep-flag x y)+
+        "A": {
+            toCanvas: function (pos, relative, args) {
+                var args = args.slice();
+                if (relative) {
+                    args[5] += pos.x;
+                    args[6] += pos.y;
+                }
+                var pathElements = SVGPath.parseEllipticalArc(pos, { x: args[0], y: args[1] }, args[2], args[3], args[4], {
+                    x: args[5],
+                    y: args[6]
+                });
+                pos.x = args[5];
+                pos.y = args[6];
+                return pathElements;
+            },
+            regexPattern: [RegexPatterns.Num, RegexPatterns.Num, RegexPatterns.Num, RegexPatterns.Flag, RegexPatterns.Flag, RegexPatterns.Num, RegexPatterns.Num],
+        },
+        // Zz
+        "Z": {
+            toCanvas: function (pos, relative, args) {
+                var from = {
+                    x: pos.x,
+                    y: pos.y
+                };
+                pos.x = args[0];
+                pos.y = args[1];
+                return [{
+                        f: CanvasCommand.Line,
+                        args: args,
+                        from: from
+                    }];
+            },
+            regexPattern: []
+        },
+    };
+    return SVGPath;
 }());
 //# sourceMappingURL=particle.js.map
