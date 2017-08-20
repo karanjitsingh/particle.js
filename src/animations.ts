@@ -1,6 +1,7 @@
 /* TODO
  * options taking default values
  * test all options
+ * test for quadratic
  */
 
 module ParticleJSAnimations {
@@ -38,8 +39,8 @@ module ParticleJSAnimations {
                 radiusVariation: 0,
             },
             pathVariation: 0,
-            lineDensity: 0.5,
-            scale: 0.1,
+            lineDensity: 1,
+            scale: 10,
             blur: false,
             forceFactor: 10,
             maxRepelDistance: 100,
@@ -83,6 +84,12 @@ module ParticleJSAnimations {
                         
                         this.pathObjects.push(new ExplodingSVG.Shapes.Arc(pos[0], pos[1], size[0]*2, size[1]*2, angle[3], angle[4], rotate, this.options.scale));
                         break;
+                    case CanvasCommand.BezierCurve:
+                        var args = path[i].args;
+                        this.pathObjects.push(new ExplodingSVG.Shapes.BezierCurve({x: path[i].from.x, y: path[i].from.y}, {x: args[0], y: args[1]}, {x: args[2], y: args[3]}, {x: args[4], y: args[5]}, this.options.scale));
+                        break;
+                    default:
+                        console.log(path[i].f);
                 }
             }
         }
@@ -126,11 +133,9 @@ module ParticleJSAnimations {
                 
                 constructor(x1, y1, x2, y2, scale) {
                     var theta;
-                    x1 = x1 < x2 ? x1 : x2;
-                    x2 = x1 < x2 ? x2 : x1;
-                    y1 = x1 < x2 ? y1 : y2;
-                    y2 = x1 < x2 ? y2 : y1;
-                    
+                    var xdiff = Math.abs(x1 - x2) * scale;
+                    var ydiff = Math.abs(y1 - y2) * scale;
+
                     x1 *= scale;
                     y1 *= scale;
                     x2 *= scale;
@@ -141,10 +146,10 @@ module ParticleJSAnimations {
                     else
                         theta = Math.PI / 2
                     
-                    this.length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+                    this.length = Math.sqrt(Math.pow(xdiff, 2) + Math.pow(ydiff, 2));
                     
-                    this.ck = this.length * Math.cos(theta);
-                    this.sk = this.length * Math.sin(theta);
+                    this.ck = this.length * Math.cos(theta) * (x1 > x2 ? -1 : 1);
+                    this.sk = this.length * Math.sin(theta) * (x1 > x2 || (x1 == x2 && y1 > y2) ? -1 : 1);
                     
                     this.start = {
                         x: x1,
@@ -211,27 +216,84 @@ module ParticleJSAnimations {
                 
             }
             
-            public BezierCurve = class implements PathObject {
+            public static BezierCurve = class implements PathObject {
                 public length: number;
+                private p1: Point;
+                private p2: Point;
+                private p3: Point;
+                private p4: Point;
                 
-                constructor(x1, y1, x2, y2, x, y) {
+                constructor(p1: Point, p2: Point, p3: Point, p4: Point, scale: number) {
+                    this.p1 = {x: p1.x * scale, y:p1.y * scale};
+                    this.p2 = {x: p2.x * scale, y:p2.y * scale};
+                    this.p3 = {x: p3.x * scale, y:p3.y * scale};
+                    this.p4 = {x: p4.x * scale, y:p4.y * scale};
+                    
+                    this.length=0;
+
+                    var distance = (a,b) => Math.sqrt(Math.pow(Math.abs(a.x - b.x),2) + Math.pow(Math.abs(a.y - b.y),2));
+
+                    var p1 = {
+                        x: this.p1.x,
+                        y: this.p1.y
+                    }
+
+                    for(var i=0.01;i<=1;i+=0.01) {
+                        p2 = this.nthPoint(i);
+                        this.length += distance(p1, p2);
+                        p1 = p2;
+                    }
                 }
                 
                 public nthPoint(n: number): Point {
-                    return;
+                    
+                    var a = (1-n), a2 = a*a, a3 = a2*a;
+                    var b = n, b2 = b*b, b3 = b2*b;
+
+                    return {
+                        x: a3*this.p1.x + 3*b*a2*this.p2.x + 3*b2*a*this.p3.x +b3*this.p4.x,
+                        y: a3*this.p1.y + 3*b*a2*this.p2.y + 3*b2*a*this.p3.y +b3*this.p4.y
+                    };
                 }
                 
             }
             
             public QuadraticCurve = class implements PathObject {
                 public length: number;
+                private p1: Point;
+                private p2: Point;
+                private p3: Point;
                 
-                constructor(x, y, r, sa, ea) {
+                constructor(p1: Point, p2: Point, p3: Point, scale: number) {
+                    this.p1 = {x: p1.x * scale, y:p1.y * scale};
+                    this.p2 = {x: p2.x * scale, y:p2.y * scale};
+                    this.p3 = {x: p3.x * scale, y:p3.y * scale};
                     
+                    this.length=0;
+
+                    var distance = (a,b) => Math.sqrt(Math.pow(Math.abs(a.x - b.x),2) + Math.pow(Math.abs(a.y - b.y),2));
+
+                    var p1 = {
+                        x: this.p1.x,
+                        y: this.p1.y
+                    }
+
+                    for(var i=0.01;i<=1;i+=0.01) {
+                        p2 = this.nthPoint(i);
+                        this.length += distance(p1, p2);
+                        p1 = p2;
+                    }
                 }
                 
                 public nthPoint(n: number): Point {
-                    return;
+                    
+                    var a = (1-n), a2 = a*a;
+                    var b = n, b2 = b*b;
+
+                    return {
+                        x: a2*this.p1.x + 2*b*a*this.p2.x + b2*this.p3.x,
+                        y: a2*this.p1.y + 2*b*a*this.p2.y + b2*this.p3.y
+                    };
                 }
                 
             }

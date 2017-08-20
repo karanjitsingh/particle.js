@@ -1,6 +1,7 @@
 /* TODO
  * options taking default values
  * test all options
+ * test for quadratic
  */
 var ParticleJSAnimations;
 (function (ParticleJSAnimations) {
@@ -30,6 +31,12 @@ var ParticleJSAnimations;
                         var angle = path[i].args;
                         this.pathObjects.push(new ExplodingSVG.Shapes.Arc(pos[0], pos[1], size[0] * 2, size[1] * 2, angle[3], angle[4], rotate, this.options.scale));
                         break;
+                    case CanvasCommand.BezierCurve:
+                        var args = path[i].args;
+                        this.pathObjects.push(new ExplodingSVG.Shapes.BezierCurve({ x: path[i].from.x, y: path[i].from.y }, { x: args[0], y: args[1] }, { x: args[2], y: args[3] }, { x: args[4], y: args[5] }, this.options.scale));
+                        break;
+                    default:
+                        console.log(path[i].f);
                 }
             }
         };
@@ -119,8 +126,8 @@ var ParticleJSAnimations;
                 radiusVariation: 0,
             },
             pathVariation: 0,
-            lineDensity: 0.5,
-            scale: 0.1,
+            lineDensity: 1,
+            scale: 10,
             blur: false,
             forceFactor: 10,
             maxRepelDistance: 100,
@@ -132,32 +139,41 @@ var ParticleJSAnimations;
         };
         ExplodingSVG.Shapes = (_a = (function () {
                 function class_1() {
-                    this.BezierCurve = (function () {
-                        function class_2(x1, y1, x2, y2, x, y) {
+                    this.QuadraticCurve = (function () {
+                        function class_2(p1, p2, p3, scale) {
+                            this.p1 = { x: p1.x * scale, y: p1.y * scale };
+                            this.p2 = { x: p2.x * scale, y: p2.y * scale };
+                            this.p3 = { x: p3.x * scale, y: p3.y * scale };
+                            this.length = 0;
+                            var distance = function (a, b) { return Math.sqrt(Math.pow(Math.abs(a.x - b.x), 2) + Math.pow(Math.abs(a.y - b.y), 2)); };
+                            var p1 = {
+                                x: this.p1.x,
+                                y: this.p1.y
+                            };
+                            for (var i = 0.01; i <= 1; i += 0.01) {
+                                p2 = this.nthPoint(i);
+                                this.length += distance(p1, p2);
+                                p1 = p2;
+                            }
                         }
                         class_2.prototype.nthPoint = function (n) {
-                            return;
+                            var a = (1 - n), a2 = a * a;
+                            var b = n, b2 = b * b;
+                            return {
+                                x: a2 * this.p1.x + 2 * b * a * this.p2.x + b2 * this.p3.x,
+                                y: a2 * this.p1.y + 2 * b * a * this.p2.y + b2 * this.p3.y
+                            };
                         };
                         return class_2;
-                    }());
-                    this.QuadraticCurve = (function () {
-                        function class_3(x, y, r, sa, ea) {
-                        }
-                        class_3.prototype.nthPoint = function (n) {
-                            return;
-                        };
-                        return class_3;
                     }());
                 }
                 return class_1;
             }()),
             _a.Line = (function () {
-                function class_4(x1, y1, x2, y2, scale) {
+                function class_3(x1, y1, x2, y2, scale) {
                     var theta;
-                    x1 = x1 < x2 ? x1 : x2;
-                    x2 = x1 < x2 ? x2 : x1;
-                    y1 = x1 < x2 ? y1 : y2;
-                    y2 = x1 < x2 ? y2 : y1;
+                    var xdiff = Math.abs(x1 - x2) * scale;
+                    var ydiff = Math.abs(y1 - y2) * scale;
                     x1 *= scale;
                     y1 *= scale;
                     x2 *= scale;
@@ -166,21 +182,21 @@ var ParticleJSAnimations;
                         theta = Math.atan((y1 - y2) / (x1 - x2));
                     else
                         theta = Math.PI / 2;
-                    this.length = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-                    this.ck = this.length * Math.cos(theta);
-                    this.sk = this.length * Math.sin(theta);
+                    this.length = Math.sqrt(Math.pow(xdiff, 2) + Math.pow(ydiff, 2));
+                    this.ck = this.length * Math.cos(theta) * (x1 > x2 ? -1 : 1);
+                    this.sk = this.length * Math.sin(theta) * (x1 > x2 || (x1 == x2 && y1 > y2) ? -1 : 1);
                     this.start = {
                         x: x1,
                         y: y1
                     };
                 }
-                class_4.prototype.nthPoint = function (n) {
+                class_3.prototype.nthPoint = function (n) {
                     return { x: this.start.x + n * this.ck, y: this.start.y + n * this.sk };
                 };
-                return class_4;
+                return class_3;
             }()),
             _a.Arc = (function () {
-                function class_5(x, y, w, h, sa, ea, phi, scale) {
+                function class_4(x, y, w, h, sa, ea, phi, scale) {
                     this.x = x * scale,
                         this.y = y * scale,
                         this.w = w * scale,
@@ -194,7 +210,7 @@ var ParticleJSAnimations;
                     this.length = (1.111 * (Math.sqrt(Math.pow(this.w / 2 * (Math.cos(this.sa) - Math.cos(this.ea)), 2) +
                         Math.pow(this.h / 2 * (Math.sin(this.sa) - Math.sin(this.ea)), 2))));
                 }
-                class_5.prototype.nthPoint = function (n) {
+                class_4.prototype.nthPoint = function (n) {
                     var _this = this;
                     function rotate(cx, cy, p, theta) {
                         var pPrime = { x: 0, y: 0 };
@@ -209,6 +225,34 @@ var ParticleJSAnimations;
                         };
                     };
                     return this.phi ? rotate(this.x, this.y, getPoint(n), this.phi) : getPoint(n);
+                };
+                return class_4;
+            }()),
+            _a.BezierCurve = (function () {
+                function class_5(p1, p2, p3, p4, scale) {
+                    this.p1 = { x: p1.x * scale, y: p1.y * scale };
+                    this.p2 = { x: p2.x * scale, y: p2.y * scale };
+                    this.p3 = { x: p3.x * scale, y: p3.y * scale };
+                    this.p4 = { x: p4.x * scale, y: p4.y * scale };
+                    this.length = 0;
+                    var distance = function (a, b) { return Math.sqrt(Math.pow(Math.abs(a.x - b.x), 2) + Math.pow(Math.abs(a.y - b.y), 2)); };
+                    var p1 = {
+                        x: this.p1.x,
+                        y: this.p1.y
+                    };
+                    for (var i = 0.01; i <= 1; i += 0.01) {
+                        p2 = this.nthPoint(i);
+                        this.length += distance(p1, p2);
+                        p1 = p2;
+                    }
+                }
+                class_5.prototype.nthPoint = function (n) {
+                    var a = (1 - n), a2 = a * a, a3 = a2 * a;
+                    var b = n, b2 = b * b, b3 = b2 * b;
+                    return {
+                        x: a3 * this.p1.x + 3 * b * a2 * this.p2.x + 3 * b2 * a * this.p3.x + b3 * this.p4.x,
+                        y: a3 * this.p1.y + 3 * b * a2 * this.p2.y + 3 * b2 * a * this.p3.y + b3 * this.p4.y
+                    };
                 };
                 return class_5;
             }()),
