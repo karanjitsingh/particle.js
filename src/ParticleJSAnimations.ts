@@ -1,9 +1,3 @@
-/* TODO
- * options taking default values
- * test all options
- * test for quadratic
- */
-
 module ParticleJSAnimations {
     interface PathObject {
         nthPoint: (n: number) => Point,
@@ -37,10 +31,11 @@ module ParticleJSAnimations {
                 colorSet: ["#E04836", "#F39D41", "#DDDDDD", "#5696BC"],
                 particleRadius: 2,
                 radiusVariation: 0,
+                blur: true
             },
             pathVariation: 0,
-            lineDensity: 1,
-            scale: 10,
+            lineDensity: 0.2,
+            scale: 1,
             blur: false,
             forceFactor: 10,
             maxRepelDistance: 100,
@@ -57,9 +52,10 @@ module ParticleJSAnimations {
         private atomSet: Array<Atom> = [];
         private pathObjects: Array<PathObject>;
         
-        constructor(path2d: string, options: SVGDrawOptions = ExplodingSVG.default) {
-            this.options = options;
-            
+        constructor(path2d: string, options?: SVGDrawOptions) {
+            debugger;
+            var newoptions = <SVGDrawOptions>generateOptions(options, ExplodingSVG.default);
+            this.options = newoptions;
             var path = (new SVGPath(path2d)).paths;
             this.GeneratePathObjects(path);
             this.GenerateAtomSet();
@@ -87,6 +83,10 @@ module ParticleJSAnimations {
                     case CanvasCommand.BezierCurve:
                         var args = path[i].args;
                         this.pathObjects.push(new ExplodingSVG.Shapes.BezierCurve({x: path[i].from.x, y: path[i].from.y}, {x: args[0], y: args[1]}, {x: args[2], y: args[3]}, {x: args[4], y: args[5]}, this.options.scale));
+                        break;
+                    case CanvasCommand.QuadraticCurve:
+                        var args = path[i].args;
+                        this.pathObjects.push(new ExplodingSVG.Shapes.QuadraticCurve({x: path[i].from.x, y: path[i].from.y}, {x: args[0], y: args[1]}, {x: args[2], y: args[3]}, this.options.scale));
                         break;
                     default:
                         console.log(path[i].f);
@@ -258,7 +258,7 @@ module ParticleJSAnimations {
                 
             }
             
-            public QuadraticCurve = class implements PathObject {
+            public static QuadraticCurve = class implements PathObject {
                 public length: number;
                 private p1: Point;
                 private p2: Point;

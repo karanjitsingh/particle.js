@@ -1,16 +1,132 @@
 /* TODO
- * options taking default values
- * test all options
- * test for quadratic
+ * blur
  */
+var Atom = (function () {
+    function Atom(id, speed, position, opacity, options) {
+        this.animationDone = true;
+        this.blurRadius = 0;
+        // No idea what to do with these
+        this.radiusLag = 1;
+        this.e = 0.8;
+        this.animateOpacity = true;
+        this.id = id;
+        this.options = generateOptions(options, Atom.default);
+        this.radius = this._radius = this.options.radius;
+        this.opacity = this._opacity = opacity || 1;
+        this.speed = speed || { x: 0, y: 0 };
+        this.pos = position ? { x: position.x, y: position.y } : { x: 0, y: 0 };
+        this.origin = position ? { x: position.x, y: position.y } : { x: 0, y: 0 };
+    }
+    Atom.prototype.draw = function (context) {
+        var ctx = context.canvasContext;
+        if (this.options.pop) {
+            if (this.radius < 0.001 + this.options.radius) {
+                if (Math.random() < this.options.popProbability) {
+                    this.radius += Math.random() * (this.options.popRadius - this.options.radius);
+                    this.radiusLag = Math.random() * 12 + 12;
+                }
+            }
+            else
+                this.radius += (this.options.radius - this.radius) / this.radiusLag;
+        }
+        if (this.animateOpacity)
+            this.opacity += (this._opacity - this.opacity) / 6;
+        ctx.beginPath();
+        var colorSet = this.options.colorSet;
+        if (this.blurRadius == 0 || !this.options.blur) {
+            ctx.fillStyle = HEXAtoRGBA(colorSet[this.id % colorSet.length], this.opacity);
+            ctx.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI * 2);
+        }
+        else {
+            var radgrad = ctx.createRadialGradient(this.pos.x, this.pos.y, this.radius, this.pos.x, this.pos.y, this.radius + this.blurRadius * 30);
+            radgrad.addColorStop(0, HEXAtoRGBA(colorSet[this.id % colorSet.length], this.opacity));
+            radgrad.addColorStop(1, HEXAtoRGBA(colorSet[this.id % colorSet.length], 0));
+            ctx.fillStyle = radgrad;
+            ctx.arc(this.pos.x, this.pos.y, this.radius + this.blurRadius * 30, Math.PI * 2, 0, false);
+        }
+        ctx.fill();
+        ctx.closePath();
+    };
+    Atom.default = {
+        pop: true,
+        popRadius: 4,
+        popProbability: 0.001,
+        radius: 2,
+        colorSet: ["#E04836", "#F39D41", "#DDDDDD", "#5696BC"],
+        particleRadius: 2,
+        radiusVariation: 0,
+        blur: true
+    };
+    return Atom;
+}());
+var ParticleJS = (function () {
+    function ParticleJS(canvas, drawObjectCollection, options) {
+        var _this = this;
+        this.mouse = {
+            x: NaN,
+            y: NaN
+        };
+        this.W = canvas.width;
+        this.H = canvas.height;
+        this.paths = [];
+        this.ctx = canvas.getContext('2d');
+        this.options = generateOptions(options, ParticleJS.default);
+        this.DrawObjectCollection = drawObjectCollection || [];
+        canvas.onmousemove = function (e) {
+            _this.mouse.x = e.layerX;
+            _this.mouse.y = e.layerY;
+        };
+        canvas.onmouseout = function (e) {
+            _this.mouse.x = NaN;
+            _this.mouse.y = NaN;
+        };
+        this.particles = [];
+    }
+    ParticleJS.prototype.addDrawObject = function (drawObject) {
+        this.DrawObjectCollection.push(drawObject);
+    };
+    ParticleJS.prototype.draw = function () {
+        if (this.options.beforeDraw)
+            this.options.beforeDraw(this.ctx);
+        if (this.options.drawCanvasBackground) {
+            this.ctx.fillStyle = this.options.canvasBGColor;
+            this.ctx.fillRect(0, 0, this.W, this.H);
+        }
+        else
+            this.ctx.clearRect(0, 0, this.W, this.H);
+        for (var i = 0; i < this.DrawObjectCollection.length; i++)
+            this.DrawObjectCollection[i].draw({
+                canvasContext: this.ctx,
+                mousePosition: this.mouse,
+                canvasHeight: this.H,
+                canvasWidth: this.W,
+                options: this.options
+            });
+        if (this.options.afterDraw)
+            this.options.afterDraw(this.ctx);
+    };
+    ParticleJS.prototype.start = function () {
+        this.timer = setInterval(this.draw.bind(this), this.options.animationInterval);
+    };
+    ParticleJS.prototype.stop = function () {
+        clearTimeout(this.timer);
+    };
+    ParticleJS.default = {
+        drawCanvasBackground: true,
+        canvasBGColor: "#ffffff",
+        animationInterval: 30
+    };
+    return ParticleJS;
+}());
 var ParticleJSAnimations;
 (function (ParticleJSAnimations) {
     var ExplodingSVG = (function () {
         function ExplodingSVG(path2d, options) {
-            if (options === void 0) { options = ExplodingSVG.default; }
             this.offset = { x: 0, y: 0 };
             this.atomSet = [];
-            this.options = options;
+            debugger;
+            var newoptions = generateOptions(options, ExplodingSVG.default);
+            this.options = newoptions;
             var path = (new SVGPath(path2d)).paths;
             this.GeneratePathObjects(path);
             this.GenerateAtomSet();
@@ -34,6 +150,10 @@ var ParticleJSAnimations;
                     case CanvasCommand.BezierCurve:
                         var args = path[i].args;
                         this.pathObjects.push(new ExplodingSVG.Shapes.BezierCurve({ x: path[i].from.x, y: path[i].from.y }, { x: args[0], y: args[1] }, { x: args[2], y: args[3] }, { x: args[4], y: args[5] }, this.options.scale));
+                        break;
+                    case CanvasCommand.QuadraticCurve:
+                        var args = path[i].args;
+                        this.pathObjects.push(new ExplodingSVG.Shapes.QuadraticCurve({ x: path[i].from.x, y: path[i].from.y }, { x: args[0], y: args[1] }, { x: args[2], y: args[3] }, this.options.scale));
                         break;
                     default:
                         console.log(path[i].f);
@@ -124,10 +244,11 @@ var ParticleJSAnimations;
                 colorSet: ["#E04836", "#F39D41", "#DDDDDD", "#5696BC"],
                 particleRadius: 2,
                 radiusVariation: 0,
+                blur: true
             },
             pathVariation: 0,
-            lineDensity: 1,
-            scale: 10,
+            lineDensity: 0.2,
+            scale: 1,
             blur: false,
             forceFactor: 10,
             maxRepelDistance: 100,
@@ -139,38 +260,11 @@ var ParticleJSAnimations;
         };
         ExplodingSVG.Shapes = (_a = (function () {
                 function class_1() {
-                    this.QuadraticCurve = (function () {
-                        function class_2(p1, p2, p3, scale) {
-                            this.p1 = { x: p1.x * scale, y: p1.y * scale };
-                            this.p2 = { x: p2.x * scale, y: p2.y * scale };
-                            this.p3 = { x: p3.x * scale, y: p3.y * scale };
-                            this.length = 0;
-                            var distance = function (a, b) { return Math.sqrt(Math.pow(Math.abs(a.x - b.x), 2) + Math.pow(Math.abs(a.y - b.y), 2)); };
-                            var p1 = {
-                                x: this.p1.x,
-                                y: this.p1.y
-                            };
-                            for (var i = 0.01; i <= 1; i += 0.01) {
-                                p2 = this.nthPoint(i);
-                                this.length += distance(p1, p2);
-                                p1 = p2;
-                            }
-                        }
-                        class_2.prototype.nthPoint = function (n) {
-                            var a = (1 - n), a2 = a * a;
-                            var b = n, b2 = b * b;
-                            return {
-                                x: a2 * this.p1.x + 2 * b * a * this.p2.x + b2 * this.p3.x,
-                                y: a2 * this.p1.y + 2 * b * a * this.p2.y + b2 * this.p3.y
-                            };
-                        };
-                        return class_2;
-                    }());
                 }
                 return class_1;
             }()),
             _a.Line = (function () {
-                function class_3(x1, y1, x2, y2, scale) {
+                function class_2(x1, y1, x2, y2, scale) {
                     var theta;
                     var xdiff = Math.abs(x1 - x2) * scale;
                     var ydiff = Math.abs(y1 - y2) * scale;
@@ -190,13 +284,13 @@ var ParticleJSAnimations;
                         y: y1
                     };
                 }
-                class_3.prototype.nthPoint = function (n) {
+                class_2.prototype.nthPoint = function (n) {
                     return { x: this.start.x + n * this.ck, y: this.start.y + n * this.sk };
                 };
-                return class_3;
+                return class_2;
             }()),
             _a.Arc = (function () {
-                function class_4(x, y, w, h, sa, ea, phi, scale) {
+                function class_3(x, y, w, h, sa, ea, phi, scale) {
                     this.x = x * scale,
                         this.y = y * scale,
                         this.w = w * scale,
@@ -210,7 +304,7 @@ var ParticleJSAnimations;
                     this.length = (1.111 * (Math.sqrt(Math.pow(this.w / 2 * (Math.cos(this.sa) - Math.cos(this.ea)), 2) +
                         Math.pow(this.h / 2 * (Math.sin(this.sa) - Math.sin(this.ea)), 2))));
                 }
-                class_4.prototype.nthPoint = function (n) {
+                class_3.prototype.nthPoint = function (n) {
                     var _this = this;
                     function rotate(cx, cy, p, theta) {
                         var pPrime = { x: 0, y: 0 };
@@ -226,10 +320,10 @@ var ParticleJSAnimations;
                     };
                     return this.phi ? rotate(this.x, this.y, getPoint(n), this.phi) : getPoint(n);
                 };
-                return class_4;
+                return class_3;
             }()),
             _a.BezierCurve = (function () {
-                function class_5(p1, p2, p3, p4, scale) {
+                function class_4(p1, p2, p3, p4, scale) {
                     this.p1 = { x: p1.x * scale, y: p1.y * scale };
                     this.p2 = { x: p2.x * scale, y: p2.y * scale };
                     this.p3 = { x: p3.x * scale, y: p3.y * scale };
@@ -246,12 +340,39 @@ var ParticleJSAnimations;
                         p1 = p2;
                     }
                 }
-                class_5.prototype.nthPoint = function (n) {
+                class_4.prototype.nthPoint = function (n) {
                     var a = (1 - n), a2 = a * a, a3 = a2 * a;
                     var b = n, b2 = b * b, b3 = b2 * b;
                     return {
                         x: a3 * this.p1.x + 3 * b * a2 * this.p2.x + 3 * b2 * a * this.p3.x + b3 * this.p4.x,
                         y: a3 * this.p1.y + 3 * b * a2 * this.p2.y + 3 * b2 * a * this.p3.y + b3 * this.p4.y
+                    };
+                };
+                return class_4;
+            }()),
+            _a.QuadraticCurve = (function () {
+                function class_5(p1, p2, p3, scale) {
+                    this.p1 = { x: p1.x * scale, y: p1.y * scale };
+                    this.p2 = { x: p2.x * scale, y: p2.y * scale };
+                    this.p3 = { x: p3.x * scale, y: p3.y * scale };
+                    this.length = 0;
+                    var distance = function (a, b) { return Math.sqrt(Math.pow(Math.abs(a.x - b.x), 2) + Math.pow(Math.abs(a.y - b.y), 2)); };
+                    var p1 = {
+                        x: this.p1.x,
+                        y: this.p1.y
+                    };
+                    for (var i = 0.01; i <= 1; i += 0.01) {
+                        p2 = this.nthPoint(i);
+                        this.length += distance(p1, p2);
+                        p1 = p2;
+                    }
+                }
+                class_5.prototype.nthPoint = function (n) {
+                    var a = (1 - n), a2 = a * a;
+                    var b = n, b2 = b * b;
+                    return {
+                        x: a2 * this.p1.x + 2 * b * a * this.p2.x + b2 * this.p3.x,
+                        y: a2 * this.p1.y + 2 * b * a * this.p2.y + b2 * this.p3.y
                     };
                 };
                 return class_5;
@@ -269,140 +390,19 @@ function HEXAtoRGBA(hex, a) {
         "," + parseInt(hex.substr(4, 2), 16) +
         "," + a + ")";
 }
-// interface AtomDrawOptions {
-//     pop: true,
-//     popRadius: 4,
-//     popProbability: 0.001,
-//     radius: 2,
-//     colorSet: ["#E04836", "#F39D41", "#DDDDDD", "#5696BC"],
-//     particleRadius: 2,
-//     radiusVariation: 0,
-// }
-// interface ParticleJSOptions {
-//     drawCanvasBackground: true,
-//     canvasBGColor: "#ffffff",
-//     animationInterval: 30
-//     beforeDraw?: (ctx: CanvasRenderingContext2D) => void,
-//     afterDraw?: (ctx: CanvasRenderingContext2D) => void
-// }
-var Atom = (function () {
-    function Atom(id, speed, position, opacity, options) {
-        if (options === void 0) { options = Atom.default; }
-        this.animationDone = true;
-        this.blurRadius = 0;
-        // No idea what to do with these
-        this.radiusLag = 1;
-        this.e = 0.8;
-        this.animateOpacity = true;
-        this.id = id;
-        this.options = options;
-        this.radius = this._radius = this.options.radius;
-        this.opacity = this._opacity = opacity || 1;
-        this.speed = speed || { x: 0, y: 0 };
-        this.pos = position ? { x: position.x, y: position.y } : { x: 0, y: 0 };
-        this.origin = position ? { x: position.x, y: position.y } : { x: 0, y: 0 };
-    }
-    Atom.prototype.draw = function (context) {
-        var ctx = context.canvasContext;
-        if (this.options.pop) {
-            if (this.radius < 0.001 + this.options.radius) {
-                if (Math.random() < this.options.popProbability) {
-                    this.radius += Math.random() * (this.options.popRadius - this.options.radius);
-                    this.radiusLag = Math.random() * 12 + 12;
-                }
-            }
+function generateOptions(options, defaultOptions) {
+    var newOptions = {};
+    if (options == undefined)
+        for (var i in defaultOptions)
+            newOptions[i] = defaultOptions[i];
+    else
+        for (var i in defaultOptions)
+            if (options[i] == undefined)
+                newOptions[i] = defaultOptions[i];
             else
-                this.radius += (this.options.radius - this.radius) / this.radiusLag;
-        }
-        if (this.animateOpacity)
-            this.opacity += (this._opacity - this.opacity) / 6;
-        ctx.beginPath();
-        var colorSet = this.options.colorSet;
-        // if (this.blurRadius == 0 || !Particles.animations.params.blur) {
-        ctx.fillStyle = HEXAtoRGBA(colorSet[this.id % colorSet.length], this.opacity);
-        ctx.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI * 2);
-        // }
-        // else {
-        //     var radgrad = ctx.createRadialGradient(this.x, this.y, this.radius, this.x, this.y, this.radius + this.blurRadius * 30);
-        //     radgrad.addColorStop(0, HEXAtoRGBA(popColors[this.i % popColors.length], this.opacity));
-        //     radgrad.addColorStop(1, HEXAtoRGBA(popColors[this.i % popColors.length], 0));
-        //     ctx.fillStyle = radgrad;
-        //     ctx.arc(this.x, this.y, this.radius + this.blurRadius * 30, Math.PI * 2, false);
-        // }
-        ctx.fill();
-        ctx.closePath();
-    };
-    Atom.default = {
-        pop: true,
-        popRadius: 4,
-        popProbability: 0.001,
-        radius: 2,
-        colorSet: ["#E04836", "#F39D41", "#DDDDDD", "#5696BC"],
-        particleRadius: 2,
-        radiusVariation: 0,
-    };
-    return Atom;
-}());
-var ParticleJS = (function () {
-    function ParticleJS(canvas, drawObjectCollection, options) {
-        if (options === void 0) { options = ParticleJS.default; }
-        var _this = this;
-        this.mouse = {
-            x: NaN,
-            y: NaN
-        };
-        this.W = canvas.width;
-        this.H = canvas.height;
-        this.paths = [];
-        this.ctx = canvas.getContext('2d');
-        this.options = options;
-        this.DrawObjectCollection = drawObjectCollection || [];
-        canvas.onmousemove = function (e) {
-            _this.mouse.x = e.layerX;
-            _this.mouse.y = e.layerY;
-        };
-        canvas.onmouseout = function (e) {
-            _this.mouse.x = NaN;
-            _this.mouse.y = NaN;
-        };
-        this.particles = [];
-    }
-    ParticleJS.prototype.addDrawObject = function (drawObject) {
-        this.DrawObjectCollection.push(drawObject);
-    };
-    ParticleJS.prototype.draw = function () {
-        if (this.options.beforeDraw)
-            this.options.beforeDraw(this.ctx);
-        if (this.options.drawCanvasBackground) {
-            this.ctx.fillStyle = this.options.canvasBGColor;
-            this.ctx.fillRect(0, 0, this.W, this.H);
-        }
-        else
-            this.ctx.clearRect(0, 0, this.W, this.H);
-        for (var i = 0; i < this.DrawObjectCollection.length; i++)
-            this.DrawObjectCollection[i].draw({
-                canvasContext: this.ctx,
-                mousePosition: this.mouse,
-                canvasHeight: this.H,
-                canvasWidth: this.W,
-                options: this.options
-            });
-        if (this.options.afterDraw)
-            this.options.afterDraw(this.ctx);
-    };
-    ParticleJS.prototype.start = function () {
-        this.timer = setInterval(this.draw.bind(this), this.options.animationInterval);
-    };
-    ParticleJS.prototype.stop = function () {
-        clearTimeout(this.timer);
-    };
-    ParticleJS.default = {
-        drawCanvasBackground: true,
-        canvasBGColor: "#ffffff",
-        animationInterval: 30
-    };
-    return ParticleJS;
-}());
+                newOptions[i] = options[i];
+    return newOptions;
+}
 var CanvasCommand;
 (function (CanvasCommand) {
     CanvasCommand["Move"] = "moveTo";

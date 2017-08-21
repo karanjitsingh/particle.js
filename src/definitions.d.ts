@@ -1,6 +1,7 @@
 
 interface AtomDrawOptions {
     pop: boolean,
+    blur: boolean,
     popRadius: number,
     popProbability: number,
     radius: number,
