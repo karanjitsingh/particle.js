@@ -6,6 +6,10 @@ function HEXAtoRGBA(hex, a) {
     "," + a + ")";
 }
 
+/* Todo
+ * recursive option generation
+ */
+
 function generateOptions(options, defaultOptions) {
     var newOptions = {};
 

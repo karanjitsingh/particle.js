@@ -1,13 +1,9 @@
-/* TODO
- * blur
- */
 var Atom = (function () {
     function Atom(id, speed, position, opacity, options) {
         this.animationDone = true;
         this.blurRadius = 0;
         // No idea what to do with these
         this.radiusLag = 1;
-        this.e = 0.8;
         this.animateOpacity = true;
         this.id = id;
         this.options = generateOptions(options, Atom.default);
@@ -118,26 +114,50 @@ var ParticleJS = (function () {
     };
     return ParticleJS;
 }());
+function HEXAtoRGBA(hex, a) {
+    hex = hex.substring(1, 7);
+    return "rgba(" + parseInt(hex.substr(0, 2), 16) +
+        "," + parseInt(hex.substr(2, 2), 16) +
+        "," + parseInt(hex.substr(4, 2), 16) +
+        "," + a + ")";
+}
+/* Todo
+ * recursive option generation
+ */
+function generateOptions(options, defaultOptions) {
+    var newOptions = {};
+    if (options == undefined)
+        for (var i in defaultOptions)
+            newOptions[i] = defaultOptions[i];
+    else
+        for (var i in defaultOptions)
+            if (options[i] == undefined)
+                newOptions[i] = defaultOptions[i];
+            else
+                newOptions[i] = options[i];
+    return newOptions;
+}
+/* TODO
+ * readjustable atoms
+ */
 var ParticleJSAnimations;
 (function (ParticleJSAnimations) {
-    var ExplodingSVG = (function () {
-        function ExplodingSVG(path2d, options) {
+    var SVGAnimation = (function () {
+        function SVGAnimation(path2d, options) {
             this.offset = { x: 0, y: 0 };
             this.atomSet = [];
-            debugger;
-            var newoptions = generateOptions(options, ExplodingSVG.default);
-            this.options = newoptions;
+            this.options = generateOptions(options, SVGAnimation.default);
             var path = (new SVGPath(path2d)).paths;
             this.GeneratePathObjects(path);
             this.GenerateAtomSet();
         }
-        ExplodingSVG.prototype.GeneratePathObjects = function (path) {
+        SVGAnimation.prototype.GeneratePathObjects = function (path) {
             this.pathObjects = [];
             var ctx;
             for (var i = 0; i < path.length; i++) {
                 switch (path[i].f) {
                     case CanvasCommand.Line:
-                        this.pathObjects.push(new ExplodingSVG.Shapes.Line(path[i].from.x, path[i].from.y, path[i].args[0], path[i].args[1], this.options.scale));
+                        this.pathObjects.push(new SVGAnimation.Shapes.Line(path[i].from.x, path[i].from.y, path[i].args[0], path[i].args[1], this.options.scale));
                         break;
                     case CanvasCommand.EllipticalArc:
                         var args = path[i].args;
@@ -145,22 +165,22 @@ var ParticleJSAnimations;
                         var rotate = path[i - 2].args[0];
                         var size = path[i - 1].args;
                         var angle = path[i].args;
-                        this.pathObjects.push(new ExplodingSVG.Shapes.Arc(pos[0], pos[1], size[0] * 2, size[1] * 2, angle[3], angle[4], rotate, this.options.scale));
+                        this.pathObjects.push(new SVGAnimation.Shapes.Arc(pos[0], pos[1], size[0] * 2, size[1] * 2, angle[3], angle[4], rotate, this.options.scale));
                         break;
                     case CanvasCommand.BezierCurve:
                         var args = path[i].args;
-                        this.pathObjects.push(new ExplodingSVG.Shapes.BezierCurve({ x: path[i].from.x, y: path[i].from.y }, { x: args[0], y: args[1] }, { x: args[2], y: args[3] }, { x: args[4], y: args[5] }, this.options.scale));
+                        this.pathObjects.push(new SVGAnimation.Shapes.BezierCurve({ x: path[i].from.x, y: path[i].from.y }, { x: args[0], y: args[1] }, { x: args[2], y: args[3] }, { x: args[4], y: args[5] }, this.options.scale));
                         break;
                     case CanvasCommand.QuadraticCurve:
                         var args = path[i].args;
-                        this.pathObjects.push(new ExplodingSVG.Shapes.QuadraticCurve({ x: path[i].from.x, y: path[i].from.y }, { x: args[0], y: args[1] }, { x: args[2], y: args[3] }, this.options.scale));
+                        this.pathObjects.push(new SVGAnimation.Shapes.QuadraticCurve({ x: path[i].from.x, y: path[i].from.y }, { x: args[0], y: args[1] }, { x: args[2], y: args[3] }, this.options.scale));
                         break;
                     default:
                         console.log(path[i].f);
                 }
             }
         };
-        ExplodingSVG.prototype.GenerateAtomSet = function () {
+        SVGAnimation.prototype.GenerateAtomSet = function () {
             var density = this.options.lineDensity;
             var length = 0;
             for (var i = 0; i < this.pathObjects.length; i++)
@@ -178,7 +198,7 @@ var ParticleJSAnimations;
                 }
             }
         };
-        ExplodingSVG.prototype.draw = function (context) {
+        SVGAnimation.prototype.draw = function (context) {
             var mouse = context.mousePosition;
             for (var i = 0, atom = this.atomSet[i]; i < this.atomSet.length; i++, atom = this.atomSet[i]) {
                 atom.pos.x += atom.speed.x;
@@ -235,7 +255,7 @@ var ParticleJSAnimations;
                 atom.draw(context);
             }
         };
-        ExplodingSVG.default = {
+        SVGAnimation.default = {
             atomOptions: {
                 pop: true,
                 popRadius: 4,
@@ -258,7 +278,7 @@ var ParticleJSAnimations;
             gravity: 1000,
             frictionFactor: 0.9
         };
-        ExplodingSVG.Shapes = (_a = (function () {
+        SVGAnimation.Shapes = (_a = (function () {
                 function class_1() {
                 }
                 return class_1;
@@ -378,31 +398,75 @@ var ParticleJSAnimations;
                 return class_5;
             }()),
             _a);
-        return ExplodingSVG;
+        return SVGAnimation;
         var _a;
     }());
-    ParticleJSAnimations.ExplodingSVG = ExplodingSVG;
+    ParticleJSAnimations.SVGAnimation = SVGAnimation;
 })(ParticleJSAnimations || (ParticleJSAnimations = {}));
-function HEXAtoRGBA(hex, a) {
-    hex = hex.substring(1, 7);
-    return "rgba(" + parseInt(hex.substr(0, 2), 16) +
-        "," + parseInt(hex.substr(2, 2), 16) +
-        "," + parseInt(hex.substr(4, 2), 16) +
-        "," + a + ")";
-}
-function generateOptions(options, defaultOptions) {
-    var newOptions = {};
-    if (options == undefined)
-        for (var i in defaultOptions)
-            newOptions[i] = defaultOptions[i];
-    else
-        for (var i in defaultOptions)
-            if (options[i] == undefined)
-                newOptions[i] = defaultOptions[i];
-            else
-                newOptions[i] = options[i];
-    return newOptions;
-}
+/* TODO
+ * test wave animation for changing properties
+ */
+var ParticleJSAnimations;
+(function (ParticleJSAnimations) {
+    var WaveAnimation = (function () {
+        function WaveAnimation(totalAtoms, waves, options) {
+            this.options = generateOptions(options, WaveAnimation.default);
+            this.atomSet = [];
+            this.waves = [];
+            this.totalAtoms = totalAtoms;
+            for (var i in waves)
+                this.waves.push(generateOptions(waves[i], { time: 0, amplitude: 0, wavelength: 0, phase: 0, timePeriod: 0, increment: 0.1 }));
+            for (var j = 0; j < totalAtoms; j++)
+                this.atomSet.push(new Atom(j, { x: 0, y: 0 }, { x: j / totalAtoms * this.options.width, y: this.options.top }, 1, this.options.atomOptions));
+        }
+        WaveAnimation.prototype.addWave = function (wave) {
+            this.waves.push(wave);
+        };
+        WaveAnimation.prototype.removeWave = function (wave) {
+            var key = null;
+            for (var i = 0; i < this.waves.length; i++) {
+                if (this.waves[i] == wave)
+                    key = this.waves.splice(i, 1);
+            }
+            return key;
+        };
+        WaveAnimation.prototype.draw = function (context) {
+            for (var j = 0; j < this.totalAtoms; j++) {
+                var atom = this.atomSet[j];
+                var x = 0, y = 0;
+                for (var i = 0; i < this.waves.length; i++) {
+                    var wave = this.waves[i];
+                    var theta = 2 * Math.PI / wave.timePeriod * wave.time - 2 * Math.PI / wave.wavelength * atom.pos.x;
+                    y += wave.amplitude * Math.sin(theta);
+                    x += wave.amplitude * Math.cos(theta);
+                }
+                atom.pos.y = this.options.top - y;
+                atom.draw(context);
+            }
+            for (var i = 0; i < this.waves.length; i++) {
+                this.waves[i].time = (this.waves[i].time + this.waves[i].increment) % (Math.floor(this.options.width / 250 + 1) * 10);
+            }
+        };
+        WaveAnimation.default = {
+            atomOptions: {
+                pop: true,
+                popRadius: 4,
+                popProbability: 1000,
+                radius: 2,
+                colorSet: ["#E04836", "#F39D41", "#DDDDDD", "#5696BC"],
+                particleRadius: 2,
+                radiusVariation: 0,
+                blur: true
+            },
+            scale: 1,
+            waveCollection: [],
+            top: 100,
+            width: 1000
+        };
+        return WaveAnimation;
+    }());
+    ParticleJSAnimations.WaveAnimation = WaveAnimation;
+})(ParticleJSAnimations || (ParticleJSAnimations = {}));
 var CanvasCommand;
 (function (CanvasCommand) {
     CanvasCommand["Move"] = "moveTo";

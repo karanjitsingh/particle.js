@@ -1,6 +1,3 @@
-/* TODO
- * blur
- */
 
 class Atom implements DrawObject {
     
@@ -31,7 +28,6 @@ class Atom implements DrawObject {
        
        // No idea what to do with these
        private radiusLag = 1;
-       private e = 0.8;
        private animateOpacity = true;
        
        constructor(id: number, speed?: Point, position?: Point, opacity?: number, options?: AtomDrawOptions) {

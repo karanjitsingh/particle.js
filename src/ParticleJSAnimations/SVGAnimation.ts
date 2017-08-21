@@ -1,10 +1,14 @@
+/* TODO
+ * readjustable atoms
+ */
+
 module ParticleJSAnimations {
     interface PathObject {
         nthPoint: (n: number) => Point,
         length: number,
     }
     
-    export interface SVGDrawOptions {
+    export interface SVGAnimationOptions {
         atomOptions: AtomDrawOptions
         pathVariation: number,
         lineDensity: number,
@@ -20,9 +24,9 @@ module ParticleJSAnimations {
     }
     
     
-    export class ExplodingSVG implements DrawObject {
+    export class SVGAnimation implements DrawObject {
         
-        private static default:ParticleJSAnimations.SVGDrawOptions = {
+        private static default:ParticleJSAnimations.SVGAnimationOptions = {
             atomOptions: {
                 pop: true,
                 popRadius: 4,
@@ -47,15 +51,13 @@ module ParticleJSAnimations {
         }
         
         
-        public options: SVGDrawOptions;
+        public options: SVGAnimationOptions;
         public offset: Point = {x:0, y:0};
         private atomSet: Array<Atom> = [];
         private pathObjects: Array<PathObject>;
         
-        constructor(path2d: string, options?: SVGDrawOptions) {
-            debugger;
-            var newoptions = <SVGDrawOptions>generateOptions(options, ExplodingSVG.default);
-            this.options = newoptions;
+        constructor(path2d: string, options?: SVGAnimationOptions) {
+            this.options = <SVGAnimationOptions>generateOptions(options, SVGAnimation.default);
             var path = (new SVGPath(path2d)).paths;
             this.GeneratePathObjects(path);
             this.GenerateAtomSet();
@@ -69,7 +71,7 @@ module ParticleJSAnimations {
             for(var i=0; i<path.length; i++) {
                 switch(path[i].f) {
                     case CanvasCommand.Line:
-                        this.pathObjects.push(new ExplodingSVG.Shapes.Line(path[i].from.x, path[i].from.y, path[i].args[0], path[i].args[1], this.options.scale));
+                        this.pathObjects.push(new SVGAnimation.Shapes.Line(path[i].from.x, path[i].from.y, path[i].args[0], path[i].args[1], this.options.scale));
                         break;
                     case CanvasCommand.EllipticalArc:
                         var args = path[i].args;
@@ -78,15 +80,15 @@ module ParticleJSAnimations {
                         var size = path[i-1].args;
                         var angle = path[i].args;
                         
-                        this.pathObjects.push(new ExplodingSVG.Shapes.Arc(pos[0], pos[1], size[0]*2, size[1]*2, angle[3], angle[4], rotate, this.options.scale));
+                        this.pathObjects.push(new SVGAnimation.Shapes.Arc(pos[0], pos[1], size[0]*2, size[1]*2, angle[3], angle[4], rotate, this.options.scale));
                         break;
                     case CanvasCommand.BezierCurve:
                         var args = path[i].args;
-                        this.pathObjects.push(new ExplodingSVG.Shapes.BezierCurve({x: path[i].from.x, y: path[i].from.y}, {x: args[0], y: args[1]}, {x: args[2], y: args[3]}, {x: args[4], y: args[5]}, this.options.scale));
+                        this.pathObjects.push(new SVGAnimation.Shapes.BezierCurve({x: path[i].from.x, y: path[i].from.y}, {x: args[0], y: args[1]}, {x: args[2], y: args[3]}, {x: args[4], y: args[5]}, this.options.scale));
                         break;
                     case CanvasCommand.QuadraticCurve:
                         var args = path[i].args;
-                        this.pathObjects.push(new ExplodingSVG.Shapes.QuadraticCurve({x: path[i].from.x, y: path[i].from.y}, {x: args[0], y: args[1]}, {x: args[2], y: args[3]}, this.options.scale));
+                        this.pathObjects.push(new SVGAnimation.Shapes.QuadraticCurve({x: path[i].from.x, y: path[i].from.y}, {x: args[0], y: args[1]}, {x: args[2], y: args[3]}, this.options.scale));
                         break;
                     default:
                         console.log(path[i].f);
@@ -383,8 +385,5 @@ module ParticleJSAnimations {
                 
             }        
         }
-        
     }
-    
-    
 }
