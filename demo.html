@@ -31,7 +31,7 @@ var svg = new ParticleJSAnimations.SVGAnimation(d, {lineDensity: 1, scale: 10});
 
 pjs.addDrawObject(svg);
 
-var wave = new ParticleJSAnimations.WaveAnimation(1000, [
+var wave = new ParticleJSAnimations.WaveAnimation(215, [
 	{
 		time: 0,
 		amplitude: 100,
@@ -48,8 +48,9 @@ var wave = new ParticleJSAnimations.WaveAnimation(1000, [
 		timePeriod: 10,
 		increment: 0.1
 	}
-]);
+], {top: 500, width: 300});
 
+pjs.addDrawObject(wave);
 
 pjs.start();
 

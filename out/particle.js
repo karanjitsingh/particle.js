@@ -261,7 +261,7 @@ var ParticleJSAnimations;
                 popRadius: 4,
                 popProbability: 1000,
                 radius: 2,
-                colorSet: ["#E04836", "#F39D41", "#DDDDDD", "#5696BC"],
+                colorSet: ["#E04836", "#F39D41", "#5696BC"],
                 particleRadius: 2,
                 radiusVariation: 0,
                 blur: true
@@ -442,6 +442,10 @@ var ParticleJSAnimations;
                 }
                 atom.pos.y = this.options.top - y;
                 atom.draw(context);
+                if (x < 0)
+                    atom.opacity += (0.3 - atom.opacity) / 1.1;
+                else
+                    atom.opacity = 1;
             }
             for (var i = 0; i < this.waves.length; i++) {
                 this.waves[i].time = (this.waves[i].time + this.waves[i].increment) % (Math.floor(this.options.width / 250 + 1) * 10);
@@ -453,7 +457,7 @@ var ParticleJSAnimations;
                 popRadius: 4,
                 popProbability: 1000,
                 radius: 2,
-                colorSet: ["#E04836", "#F39D41", "#DDDDDD", "#5696BC"],
+                colorSet: ["#E04836", "#F39D41", "#5696BC"],
                 particleRadius: 2,
                 radiusVariation: 0,
                 blur: true
