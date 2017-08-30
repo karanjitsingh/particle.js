@@ -14,17 +14,15 @@ class Atom implements DrawObject {
    
        private id: number;
        private random: number;
-       private _opacity: number;
-       private _radius: number;
+       private radius: number;
        
-       public radius: number;
        public origin: Point;
        public speed: Point;
-       public opacity: number;
        public pos: Point;
        public options: AtomDrawOptions;
        public animationDone = true;
        public blurRadius = 0;
+       public opacity;
        
        // No idea what to do with these
        private radiusLag = 1;
@@ -33,8 +31,8 @@ class Atom implements DrawObject {
        constructor(id: number, speed?: Point, position?: Point, opacity?: number, options?: AtomDrawOptions) {
            this.id = id;
            this.options = <AtomDrawOptions>generateOptions(options, Atom.default);
-           this.radius = this._radius = this.options.radius;
-           this.opacity = this._opacity = opacity || 1;
+           this.radius = this.options.radius;
+           this.opacity = opacity || 1;
            this.speed = speed || { x:0, y:0 };
            this.pos = position ? {x: position.x, y:position.y} : { x:0, y:0 };
            this.origin = position ? {x: position.x, y:position.y} : { x:0, y:0 };
@@ -55,9 +53,6 @@ class Atom implements DrawObject {
                else
                    this.radius += (this.options.radius - this.radius) / this.radiusLag;
            }
-           
-           if (this.animateOpacity)
-               this.opacity += (this._opacity - this.opacity) / 6;
            
            
            ctx.beginPath();

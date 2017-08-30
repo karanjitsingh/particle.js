@@ -22,7 +22,6 @@ module ParticleJSAnimations {
         waveCollection: Array<Wave>,
         top: number,
         width: number,
-        alpha: number
     }
     
     export class WaveAnimation implements DrawObject {
@@ -33,11 +32,12 @@ module ParticleJSAnimations {
             waveCollection: [],
             top: 100,
             width: 1000,
-            alpha: 1,
         }
 
         public options: WaveDrawOptions;
         public waves: Array<Wave>; 
+        public alpha = 1;
+
         private atomSet: Array<Atom>
         private totalAtoms: number;
         private callback;
@@ -47,12 +47,14 @@ module ParticleJSAnimations {
             this.atomSet = [];
             this.waves = [];
             this.totalAtoms = totalAtoms;
+            this.alpha = 1;
 
             for(var i in waves)
                 this.waves.push(<Wave> generateOptions(waves[i], <Wave> {time: 0, amplitude: 0, wavelength: 0, phase: 0, timePeriod:0, increment: 0.1}));
 
             for(var j=0;j<totalAtoms;j++)
-                this.atomSet.push(new Atom(j, {x:0, y:0}, {x: j/totalAtoms*this.options.width, y: this.options.top}, 1, this.options.atomOptions));
+                this.atomSet.push(new Atom(j, {x:0, y:0}, {x: j/totalAtoms*this.options.width, y: this.options.top}, this.alpha, this.options.atomOptions));
+
         }
 
         public addWave(wave: Wave) {
@@ -88,11 +90,11 @@ module ParticleJSAnimations {
                 atom.draw(context);
 
                 if (x < 0) {
-                    atom.opacity += (0.3 - atom.opacity * this.options.alpha) / 1.1;
-                    atom.opacity *= this.options.alpha;
+                    atom.opacity += (0.3 - atom.opacity * this.alpha) / 1.1;
+                    atom.opacity *= this.alpha;
                 }
                 else
-                    atom.opacity = 1 * this.options.alpha;
+                    atom.opacity = 1 * this.alpha;
             }
 
             for(var i=0;i<this.waves.length;i++) {
