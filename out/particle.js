@@ -442,10 +442,12 @@ var ParticleJSAnimations;
                 }
                 atom.pos.y = this.options.top - y;
                 atom.draw(context);
-                if (x < 0)
-                    atom.opacity += (0.3 - atom.opacity) / 1.1;
+                if (x < 0) {
+                    atom.opacity += (0.3 - atom.opacity * this.options.alpha) / 1.1;
+                    atom.opacity *= this.options.alpha;
+                }
                 else
-                    atom.opacity = 1;
+                    atom.opacity = 1 * this.options.alpha;
             }
             for (var i = 0; i < this.waves.length; i++) {
                 this.waves[i].time = (this.waves[i].time + this.waves[i].increment) % (Math.floor(this.options.width / 250 + 1) * 10);
@@ -456,7 +458,8 @@ var ParticleJSAnimations;
             scale: 1,
             waveCollection: [],
             top: 100,
-            width: 1000
+            width: 1000,
+            alpha: 1,
         };
         return WaveAnimation;
     }());

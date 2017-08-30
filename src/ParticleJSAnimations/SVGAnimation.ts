@@ -310,7 +310,6 @@ module ParticleJSAnimations {
                     }
                 }
                 
-                
                 var posWRTMouse = {
                     x: atom.pos.x - mouse.x,
                     y: atom.pos.y - mouse.y

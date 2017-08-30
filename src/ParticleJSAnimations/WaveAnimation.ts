@@ -21,7 +21,8 @@ module ParticleJSAnimations {
         scale: number,
         waveCollection: Array<Wave>,
         top: number,
-        width: number
+        width: number,
+        alpha: number
     }
     
     export class WaveAnimation implements DrawObject {
@@ -31,13 +32,15 @@ module ParticleJSAnimations {
             scale: 1,
             waveCollection: [],
             top: 100,
-            width: 1000
+            width: 1000,
+            alpha: 1,
         }
 
         public options: WaveDrawOptions;
         public waves: Array<Wave>; 
         private atomSet: Array<Atom>
         private totalAtoms: number;
+        private callback;
 
         constructor(totalAtoms: number,waves: Array<Wave>, options?: WaveDrawOptions) {
             this.options = <WaveDrawOptions>generateOptions(options, WaveAnimation.default);
@@ -67,7 +70,7 @@ module ParticleJSAnimations {
         }
 
         public draw(context: ParticleJSContext) {
-            
+
             for(var j=0;j<this.totalAtoms;j++) {
                 var atom = this.atomSet[j];
 
@@ -84,10 +87,12 @@ module ParticleJSAnimations {
 
                 atom.draw(context);
 
-                if (x < 0)
-                    atom.opacity += (0.3 - atom.opacity) / 1.1;
+                if (x < 0) {
+                    atom.opacity += (0.3 - atom.opacity * this.options.alpha) / 1.1;
+                    atom.opacity *= this.options.alpha;
+                }
                 else
-                    atom.opacity = 1;
+                    atom.opacity = 1 * this.options.alpha;
             }
 
             for(var i=0;i<this.waves.length;i++) {
