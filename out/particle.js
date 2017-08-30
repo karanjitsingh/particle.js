@@ -48,7 +48,7 @@ var Atom = (function () {
         popRadius: 4,
         popProbability: 0.001,
         radius: 2,
-        colorSet: ["#E04836", "#F39D41", "#DDDDDD", "#5696BC"],
+        colorSet: ["#E04836", "#F39D41", "#DDDDDD"],
         particleRadius: 2,
         radiusVariation: 0,
         blur: true
@@ -80,6 +80,15 @@ var ParticleJS = (function () {
     }
     ParticleJS.prototype.addDrawObject = function (drawObject) {
         this.DrawObjectCollection.push(drawObject);
+    };
+    ParticleJS.prototype.removeDrawObject = function (drawObject) {
+        for (var i = 0; i < this.DrawObjectCollection.length; i++) {
+            if (this.DrawObjectCollection[i] == drawObject) {
+                this.DrawObjectCollection.splice(i, 1);
+                return i;
+            }
+        }
+        return -1;
     };
     ParticleJS.prototype.draw = function () {
         if (this.options.beforeDraw)
@@ -256,16 +265,7 @@ var ParticleJSAnimations;
             }
         };
         SVGAnimation.default = {
-            atomOptions: {
-                pop: true,
-                popRadius: 4,
-                popProbability: 1000,
-                radius: 2,
-                colorSet: ["#E04836", "#F39D41", "#5696BC"],
-                particleRadius: 2,
-                radiusVariation: 0,
-                blur: true
-            },
+            atomOptions: Atom.default,
             pathVariation: 0,
             lineDensity: 0.2,
             scale: 1,
@@ -452,16 +452,7 @@ var ParticleJSAnimations;
             }
         };
         WaveAnimation.default = {
-            atomOptions: {
-                pop: true,
-                popRadius: 4,
-                popProbability: 1000,
-                radius: 2,
-                colorSet: ["#E04836", "#F39D41", "#5696BC"],
-                particleRadius: 2,
-                radiusVariation: 0,
-                blur: true
-            },
+            atomOptions: Atom.default,
             scale: 1,
             waveCollection: [],
             top: 100,

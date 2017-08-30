@@ -1,6 +1,6 @@
 class ParticleJS {
 
-    private static default: ParticleJSOptions = {
+    public static default: ParticleJSOptions = {
         drawCanvasBackground: true,
         canvasBGColor: "#ffffff",
         animationInterval: 30
@@ -44,6 +44,17 @@ class ParticleJS {
     
     public addDrawObject(drawObject:DrawObject) {
         this.DrawObjectCollection.push(drawObject);
+    }
+
+    public removeDrawObject(drawObject:DrawObject):number {
+        for(var i=0;i<this.DrawObjectCollection.length;i++) {
+            if(this.DrawObjectCollection[i] == drawObject) {
+                this.DrawObjectCollection.splice(i,1);
+                return i;
+            }
+        }
+
+        return -1;
     }
 
     public draw() {

@@ -27,16 +27,7 @@ module ParticleJSAnimations {
     export class WaveAnimation implements DrawObject {
 
         public static default: WaveDrawOptions = {
-            atomOptions: {
-                pop: true,
-                popRadius: 4,
-                popProbability: 1000,
-                radius: 2,
-                colorSet: ["#E04836", "#F39D41", "#5696BC"],
-                particleRadius: 2,
-                radiusVariation: 0,
-                blur: true
-            },
+            atomOptions: Atom.default,
             scale: 1,
             waveCollection: [],
             top: 100,

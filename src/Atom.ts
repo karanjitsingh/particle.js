@@ -1,12 +1,12 @@
 
 class Atom implements DrawObject {
     
-       private static default: AtomDrawOptions = {
+       public static default: AtomDrawOptions = {
            pop: true,
            popRadius: 4,
            popProbability: 0.001,
            radius: 2,
-           colorSet: ["#E04836", "#F39D41", "#DDDDDD", "#5696BC"],
+           colorSet: ["#E04836", "#F39D41", "#DDDDDD"],
            particleRadius: 2,
            radiusVariation: 0,
            blur: true
