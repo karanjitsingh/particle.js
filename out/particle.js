@@ -199,19 +199,20 @@ var ParticleJSAnimations;
                     var atom = new Atom(j, { x: 0, y: 0 }, {
                         x: this.options.pathVariation * (0.5 - Math.random()) + pos.x,
                         y: this.options.pathVariation * (0.5 - Math.random()) + pos.y
-                    }, 1);
+                    }, 1, this.options.atomOptions);
                     this.atomSet.push(atom);
                 }
             }
         };
         SVGAnimation.prototype.draw = function (context) {
-            if (this.firstDraw) {
+            if (this.firstDraw || !this.options.mouseRepel) {
                 this.firstDraw = false;
                 for (var i = 0, atom = this.atomSet[i]; i < this.atomSet.length; i++, atom = this.atomSet[i]) {
                     var origin = { x: atom.origin.x + this.offset.x, y: atom.origin.y + this.offset.y };
                     atom.pos.x = origin.x;
                     atom.pos.y = origin.y;
                     atom.opacity = this.alpha;
+                    atom.draw(context);
                 }
                 return;
             }
@@ -279,6 +280,7 @@ var ParticleJSAnimations;
             lineDensity: 0.2,
             scale: 1,
             blur: false,
+            mouseRepel: true,
             forceFactor: 10,
             maxRepelDistance: 100,
             minBlurDistance: 50,

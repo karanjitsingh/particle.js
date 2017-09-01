@@ -32,6 +32,10 @@ var svg = new ParticleJSAnimations.SVGAnimation(d);
 svg.offset = {x: 100, y:100};
 pjs.addDrawObject(svg);
 
+svg = new ParticleJSAnimations.SVGAnimation(d, {atomOptions: {colorSet: ["#000000"]},mouseRepel: false});
+svg.offset = {x: 100, y:200};
+pjs.addDrawObject(svg);
+
 var wave = new ParticleJSAnimations.WaveAnimation(215, [
 	{
 		time: 0,

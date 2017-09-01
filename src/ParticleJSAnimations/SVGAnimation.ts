@@ -14,6 +14,7 @@ module ParticleJSAnimations {
         lineDensity: number,
         scale: number,
         blur: boolean,
+        mouseRepel: boolean,
         forceFactor: number,
         maxRepelDistance: number,
         minBlurDistance: number,
@@ -32,6 +33,7 @@ module ParticleJSAnimations {
             lineDensity: 0.2,
             scale: 1,
             blur: false,
+            mouseRepel: true,
             forceFactor: 10,
             maxRepelDistance: 100,
             minBlurDistance: 50,
@@ -109,7 +111,8 @@ module ParticleJSAnimations {
                             x: this.options.pathVariation * (0.5 - Math.random()) + pos.x,
                             y: this.options.pathVariation * (0.5 - Math.random()) + pos.y
                         },
-                        1
+                        1,
+                        this.options.atomOptions
                     );
                     
                     this.atomSet.push(atom);
@@ -294,13 +297,14 @@ module ParticleJSAnimations {
         
         public draw(context: ParticleJSContext) {
             
-            if(this.firstDraw) {
+            if(this.firstDraw || !this.options.mouseRepel) {
                 this.firstDraw = false;
                 for(var i=0, atom:Atom=this.atomSet[i]; i<this.atomSet.length; i++,atom=this.atomSet[i]) { 
                     var origin: Point = {x: atom.origin.x + this.offset.x, y: atom.origin.y + this.offset.y};            
                     atom.pos.x = origin.x;
                     atom.pos.y = origin.y;
                     atom.opacity = this.alpha;
+                    atom.draw(context);
                 }
                 return;
             }
