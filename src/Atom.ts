@@ -7,8 +7,6 @@ class Atom implements DrawObject {
            popProbability: 0.001,
            radius: 2,
            colorSet: ["#E04836", "#F39D41", "#DDDDDD"],
-           particleRadius: 2,
-           radiusVariation: 0,
            blur: true
        }
    

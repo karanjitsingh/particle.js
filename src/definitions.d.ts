@@ -6,8 +6,6 @@ interface AtomDrawOptions {
     popProbability: number,
     radius: number,
     colorSet: Array<string>,
-    particleRadius: number,
-    radiusVariation: number,
 }
 
 interface ParticleJSOptions {

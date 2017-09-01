@@ -26,7 +26,7 @@ module ParticleJSAnimations {
     
     export class WaveAnimation implements DrawObject {
 
-        public static default: WaveDrawOptions = {
+        private static default: WaveDrawOptions = {
             atomOptions: Atom.default,
             scale: 1,
             waveCollection: [],

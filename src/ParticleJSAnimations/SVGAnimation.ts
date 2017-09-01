@@ -41,11 +41,12 @@ module ParticleJSAnimations {
             frictionFactor: 0.9
         }
         
-        
         public options: SVGAnimationOptions;
         public offset: Point = {x:0, y:0};
+        public alpha: number = 1;
         private atomSet: Array<Atom> = [];
         private pathObjects: Array<PathObject>;
+        private firstDraw: boolean = true;
         
         constructor(path2d: string, options?: SVGAnimationOptions) {
             this.options = <SVGAnimationOptions>generateOptions(options, SVGAnimation.default);
@@ -82,7 +83,6 @@ module ParticleJSAnimations {
                         this.pathObjects.push(new SVGAnimation.Shapes.QuadraticCurve({x: path[i].from.x, y: path[i].from.y}, {x: args[0], y: args[1]}, {x: args[2], y: args[3]}, this.options.scale));
                         break;
                     default:
-                        console.log(path[i].f);
                 }
             }
         }
@@ -294,18 +294,30 @@ module ParticleJSAnimations {
         
         public draw(context: ParticleJSContext) {
             
+            if(this.firstDraw) {
+                this.firstDraw = false;
+                for(var i=0, atom:Atom=this.atomSet[i]; i<this.atomSet.length; i++,atom=this.atomSet[i]) { 
+                    var origin: Point = {x: atom.origin.x + this.offset.x, y: atom.origin.y + this.offset.y};            
+                    atom.pos.x = origin.x;
+                    atom.pos.y = origin.y;
+                }
+                return;
+            }
+
             var mouse = context.mousePosition;
             
             for(var i=0, atom:Atom=this.atomSet[i]; i<this.atomSet.length; i++,atom=this.atomSet[i]) {
                 
+                var origin: Point = {x: atom.origin.x + this.offset.x, y: atom.origin.y + this.offset.y};
+
                 atom.pos.x += atom.speed.x;
                 atom.pos.y += atom.speed.y;
                 
                 if (!atom.animationDone) {
-                    atom.pos.x += (atom.origin.x - atom.pos.x) / 2;
-                    atom.pos.y += (atom.origin.y - atom.pos.y) / 2;
+                    atom.pos.x += (origin.x - atom.pos.x) / 2;
+                    atom.pos.y += (origin.y - atom.pos.y) / 2;
                     
-                    if (Math.abs(atom.pos.x - atom.origin.x) < 0.1 && Math.abs(atom.pos.y - atom.origin.y) < 0.1) {
+                    if (Math.abs(atom.pos.x - origin.x) < 0.1 && Math.abs(atom.pos.y - origin.y) < 0.1) {
                         atom.animationDone = true;
                     }
                 }
@@ -316,8 +328,8 @@ module ParticleJSAnimations {
                 };
                 
                 var posWRTOrigin = {
-                    x: atom.pos.x - atom.origin.x,
-                    y: atom.pos.y - atom.origin.y
+                    x: atom.pos.x - origin.x,
+                    y: atom.pos.y - origin.y
                 };
                 
                 var distance = Math.sqrt(
