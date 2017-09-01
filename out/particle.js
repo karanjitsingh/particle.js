@@ -47,7 +47,6 @@ var Atom = (function () {
         popProbability: 0.001,
         radius: 2,
         colorSet: ["#E04836", "#F39D41", "#DDDDDD"],
-        radiusVariation: 0,
         blur: true
     };
     return Atom;
@@ -212,6 +211,7 @@ var ParticleJSAnimations;
                     var origin = { x: atom.origin.x + this.offset.x, y: atom.origin.y + this.offset.y };
                     atom.pos.x = origin.x;
                     atom.pos.y = origin.y;
+                    atom.opacity = this.alpha;
                 }
                 return;
             }
@@ -220,6 +220,7 @@ var ParticleJSAnimations;
                 var origin = { x: atom.origin.x + this.offset.x, y: atom.origin.y + this.offset.y };
                 atom.pos.x += atom.speed.x;
                 atom.pos.y += atom.speed.y;
+                atom.opacity = this.alpha;
                 if (!atom.animationDone) {
                     atom.pos.x += (origin.x - atom.pos.x) / 2;
                     atom.pos.y += (origin.y - atom.pos.y) / 2;
