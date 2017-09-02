@@ -265,12 +265,14 @@ var ParticleJSAnimations;
                 atom.speed.y += forceDirection.y * force * context.options.animationInterval / this.options.forceFactor + gravityDirection.y * gravity * context.options.animationInterval;
                 atom.speed.y *= this.options.frictionFactor;
                 atom.speed.x *= this.options.frictionFactor;
-                if (distance2 <= this.options.minBlurDistance)
-                    atom.blurRadius = 0;
-                else if (distance2 <= this.options.maxRepelDistance)
-                    atom.blurRadius = (distance2 - this.options.minBlurDistance) / this.options.marginBlurDistance * 0.4;
-                else
-                    atom.blurRadius = 0.4;
+                if (this.options.blur) {
+                    if (distance2 <= this.options.minBlurDistance)
+                        atom.blurRadius = 0;
+                    else if (distance2 <= this.options.maxRepelDistance)
+                        atom.blurRadius = (distance2 - this.options.minBlurDistance) / this.options.marginBlurDistance * 0.4;
+                    else
+                        atom.blurRadius = 0.4;
+                }
                 atom.draw(context);
                 if (this.options.connectingLines) {
                     var ctx = context.canvasContext;
@@ -282,9 +284,9 @@ var ParticleJSAnimations;
                         ctx.lineTo(this.atomSet[i + 1].pos.x, this.atomSet[i + 1].pos.y);
                         var d = Math.sqrt(Math.pow(this.atomSet[i + 1].pos.x - atom.pos.x, 2) + Math.pow(this.atomSet[i + 1].pos.y - atom.pos.y, 2));
                         var d2 = Math.sqrt(Math.pow(this.atomSet[i + 1].origin.x - atom.origin.x, 2) + Math.pow(this.atomSet[i + 1].origin.y - atom.origin.y, 2));
-                        if (d <= d2)
+                        if (d <= d2 && d2 <= this.options.connectingLineMaxLength)
                             opacity = 0.5;
-                        else if (d <= d2 + 15) {
+                        else if (d <= d2 + 15 && d2 <= this.options.connectingLineMaxLength) {
                             opacity = (d2 + 15 - d) / 15 * 0.5;
                         }
                         else
@@ -314,6 +316,7 @@ var ParticleJSAnimations;
             connectingLineWidth: 1,
             connectingLineOpacity: 0.5,
             connectingLineColor: "#FFFFFF",
+            connectingLineMaxLength: 20,
         };
         SVGAnimation.Shapes = (_a = (function () {
                 function class_1() {
