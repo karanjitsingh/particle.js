@@ -32,7 +32,7 @@ var svg = new ParticleJSAnimations.SVGAnimation(d);
 svg.offset = {x: 100, y:100};
 pjs.addDrawObject(svg);
 
-svg = new ParticleJSAnimations.SVGAnimation(d, {atomOptions: {colorSet: ["#000000"]},mouseRepel: false});
+svg = new ParticleJSAnimations.SVGAnimation(d, {atomOptions: {colorSet: ["#000000"]}, connectingLines: true});
 svg.offset = {x: 100, y:200};
 pjs.addDrawObject(svg);
 

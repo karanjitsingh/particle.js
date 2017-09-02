@@ -272,6 +272,28 @@ var ParticleJSAnimations;
                 else
                     atom.blurRadius = 0.4;
                 atom.draw(context);
+                if (this.options.connectingLines) {
+                    var ctx = context.canvasContext;
+                    ctx.beginPath();
+                    ctx.lineWidth = this.options.connectingLineWidth;
+                    var opacity = this.options.connectingLineOpacity;
+                    ctx.moveTo(atom.pos.x, atom.pos.y);
+                    if (i + 1 < this.atomSet.length) {
+                        ctx.lineTo(this.atomSet[i + 1].pos.x, this.atomSet[i + 1].pos.y);
+                        var d = Math.sqrt(Math.pow(this.atomSet[i + 1].pos.x - atom.pos.x, 2) + Math.pow(this.atomSet[i + 1].pos.y - atom.pos.y, 2));
+                        var d2 = Math.sqrt(Math.pow(this.atomSet[i + 1].origin.x - atom.origin.x, 2) + Math.pow(this.atomSet[i + 1].origin.y - atom.origin.y, 2));
+                        if (d <= d2)
+                            opacity = 0.5;
+                        else if (d <= d2 + 15) {
+                            opacity = (d2 + 15 - d) / 15 * 0.5;
+                        }
+                        else
+                            opacity = 0;
+                    }
+                    ctx.strokeStyle = HEXAtoRGBA(this.options.connectingLineColor, opacity);
+                    ctx.stroke();
+                    ctx.closePath();
+                }
             }
         };
         SVGAnimation.default = {
@@ -287,7 +309,11 @@ var ParticleJSAnimations;
             maxBlurDistance: 200,
             marginBlurDistance: 75,
             gravity: 1000,
-            frictionFactor: 0.9
+            frictionFactor: 0.9,
+            connectingLines: false,
+            connectingLineWidth: 1,
+            connectingLineOpacity: 0.5,
+            connectingLineColor: "#FFFFFF",
         };
         SVGAnimation.Shapes = (_a = (function () {
                 function class_1() {
