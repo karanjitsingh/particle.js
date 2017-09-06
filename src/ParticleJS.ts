@@ -46,15 +46,14 @@ class ParticleJS {
         this.DrawObjectCollection.push(drawObject);
     }
 
-    public removeDrawObject(drawObject:DrawObject):number {
+    public removeDrawObject(drawObject:DrawObject): Array<Atom> {
         for(var i=0;i<this.DrawObjectCollection.length;i++) {
             if(this.DrawObjectCollection[i] == drawObject) {
-                this.DrawObjectCollection.splice(i,1);
-                return i;
+                var drawObject:DrawObject = this.DrawObjectCollection.splice(i,1)[0];
+                return drawObject.dispose();
             }
         }
-
-        return -1;
+        return null;
     }
 
     public draw() {

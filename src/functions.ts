@@ -6,7 +6,7 @@ function HEXAtoRGBA(hex, a) {
     "," + a + ")";
 }
 
-/* Todo
+/* TODO
  * recursive option generation
  */
 

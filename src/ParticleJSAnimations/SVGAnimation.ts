@@ -1,6 +1,6 @@
 /* TODO
- * readjustable atoms
- */
+* readjustable atoms
+*/
 
 module ParticleJSAnimations {
     interface PathObject {
@@ -28,7 +28,6 @@ module ParticleJSAnimations {
         connectingLineColor: string,
         connectingLineMaxLength: number,
     }
-    
     
     export class SVGAnimation implements DrawObject {
         
@@ -60,11 +59,15 @@ module ParticleJSAnimations {
         private pathObjects: Array<PathObject>;
         private firstDraw: boolean = true;
         
-        constructor(path2d: string, options?: SVGAnimationOptions) {
+        constructor(path2d: string, options?: SVGAnimationOptions, atomSet?: Array<Atom>) {
             this.options = <SVGAnimationOptions>generateOptions(options, SVGAnimation.default);
             var path = (new SVGPath(path2d)).paths;
             this.GeneratePathObjects(path);
-            this.GenerateAtomSet();
+            this.GenerateAtomSet(atomSet);
+        }
+        
+        public dispose(): Array<Atom> {
+            return this.atomSet;
         }
         
         private GeneratePathObjects(path: Array<CanvasPathElement>) {
@@ -75,36 +78,42 @@ module ParticleJSAnimations {
             for(var i=0; i<path.length; i++) {
                 switch(path[i].f) {
                     case CanvasCommand.Line:
-                        this.pathObjects.push(new SVGAnimation.Shapes.Line(path[i].from.x, path[i].from.y, path[i].args[0], path[i].args[1], this.options.scale));
-                        break;
+                    this.pathObjects.push(new SVGAnimation.Shapes.Line(path[i].from.x, path[i].from.y, path[i].args[0], path[i].args[1], this.options.scale));
+                    break;
                     case CanvasCommand.EllipticalArc:
-                        var args = path[i].args;
-                        var pos = path[i-3].args;
-                        var rotate = path[i-2].args[0];
-                        var size = path[i-1].args;
-                        var angle = path[i].args;
-                        
-                        this.pathObjects.push(new SVGAnimation.Shapes.Arc(pos[0], pos[1], size[0]*2, size[1]*2, angle[3], angle[4], rotate, this.options.scale));
-                        break;
+                    var args = path[i].args;
+                    var pos = path[i-3].args;
+                    var rotate = path[i-2].args[0];
+                    var size = path[i-1].args;
+                    var angle = path[i].args;
+                    
+                    this.pathObjects.push(new SVGAnimation.Shapes.Arc(pos[0], pos[1], size[0]*2, size[1]*2, angle[3], angle[4], rotate, this.options.scale));
+                    break;
                     case CanvasCommand.BezierCurve:
-                        var args = path[i].args;
-                        this.pathObjects.push(new SVGAnimation.Shapes.BezierCurve({x: path[i].from.x, y: path[i].from.y}, {x: args[0], y: args[1]}, {x: args[2], y: args[3]}, {x: args[4], y: args[5]}, this.options.scale));
-                        break;
+                    var args = path[i].args;
+                    this.pathObjects.push(new SVGAnimation.Shapes.BezierCurve({x: path[i].from.x, y: path[i].from.y}, {x: args[0], y: args[1]}, {x: args[2], y: args[3]}, {x: args[4], y: args[5]}, this.options.scale));
+                    break;
                     case CanvasCommand.QuadraticCurve:
-                        var args = path[i].args;
-                        this.pathObjects.push(new SVGAnimation.Shapes.QuadraticCurve({x: path[i].from.x, y: path[i].from.y}, {x: args[0], y: args[1]}, {x: args[2], y: args[3]}, this.options.scale));
-                        break;
+                    var args = path[i].args;
+                    this.pathObjects.push(new SVGAnimation.Shapes.QuadraticCurve({x: path[i].from.x, y: path[i].from.y}, {x: args[0], y: args[1]}, {x: args[2], y: args[3]}, this.options.scale));
+                    break;
                     default:
                 }
             }
         }
         
-        private GenerateAtomSet() {
+        private GenerateAtomSet(atomSet: Array<Atom>) {
             var density = this.options.lineDensity;
             
             var length = 0;
             for (var i = 0; i < this.pathObjects.length; i++)
                 length += this.pathObjects[i].length;
+            
+            var itemCount:number = 0;
+
+            if(atomSet && atomSet.length > 0) {
+                this.firstDraw = false;
+            }
             
             for (var i = 0; i < this.pathObjects.length; i++) {
                 
@@ -114,18 +123,43 @@ module ParticleJSAnimations {
                     
                     var options: AtomDrawOptions;       
                     var pos = this.pathObjects[i].nthPoint(j / bpl);
-                    var atom = new Atom(
-                        j,
-                        { x:0, y:0 },
-                        {
+                    
+                    /* TODO
+                    * error handling - although i shouldn't have to worry about this because TS
+                    */
+                    
+                    if(atomSet && atomSet.length > 0) {
+                        var atom = atomSet.splice(0,1)[0];
+                        this.atomSet.push(atom);
+                        
+                        atom.speed = {x:0, y:0},
+                        atom.origin = {
                             x: this.options.pathVariation * (0.5 - Math.random()) + pos.x,
                             y: this.options.pathVariation * (0.5 - Math.random()) + pos.y
-                        },
-                        1,
-                        this.options.atomOptions
-                    );
-                    
-                    this.atomSet.push(atom);
+                        };
+
+                        /* TODO
+                         * fuck offset...
+                         */
+                        atom.animateToOrigin();
+
+                        // Some options are applied only on instanciation
+                        atom.options = <AtomDrawOptions> generateOptions(this.options.atomOptions, Atom.default);
+                    }
+                    else {
+                        var atom = new Atom(
+                            itemCount,
+                            { x:0, y:0 },
+                            {
+                                x: this.options.pathVariation * (0.5 - Math.random()) + pos.x,
+                                y: this.options.pathVariation * (0.5 - Math.random()) + pos.y
+                            },
+                            1,
+                            this.options.atomOptions
+                        );
+                        this.atomSet.push(atom);
+                    }
+                    itemCount++;
                 }
             }    
         }
@@ -141,7 +175,7 @@ module ParticleJSAnimations {
                     var theta;
                     var xdiff = Math.abs(x1 - x2) * scale;
                     var ydiff = Math.abs(y1 - y2) * scale;
-
+                    
                     x1 *= scale;
                     y1 *= scale;
                     x2 *= scale;
@@ -166,7 +200,6 @@ module ParticleJSAnimations {
                     return {x: this.start.x + n * this.ck, y:this.start.y + n * this.sk}
                 }
             }
-            
             
             public static Arc = class implements PathObject {
                 
@@ -236,14 +269,14 @@ module ParticleJSAnimations {
                     this.p4 = {x: p4.x * scale, y:p4.y * scale};
                     
                     this.length=0;
-
+                    
                     var distance = (a,b) => Math.sqrt(Math.pow(Math.abs(a.x - b.x),2) + Math.pow(Math.abs(a.y - b.y),2));
-
+                    
                     var p1 = {
                         x: this.p1.x,
                         y: this.p1.y
                     }
-
+                    
                     for(var i=0.01;i<=1;i+=0.01) {
                         p2 = this.nthPoint(i);
                         this.length += distance(p1, p2);
@@ -255,7 +288,7 @@ module ParticleJSAnimations {
                     
                     var a = (1-n), a2 = a*a, a3 = a2*a;
                     var b = n, b2 = b*b, b3 = b2*b;
-
+                    
                     return {
                         x: a3*this.p1.x + 3*b*a2*this.p2.x + 3*b2*a*this.p3.x +b3*this.p4.x,
                         y: a3*this.p1.y + 3*b*a2*this.p2.y + 3*b2*a*this.p3.y +b3*this.p4.y
@@ -276,14 +309,14 @@ module ParticleJSAnimations {
                     this.p3 = {x: p3.x * scale, y:p3.y * scale};
                     
                     this.length=0;
-
+                    
                     var distance = (a,b) => Math.sqrt(Math.pow(Math.abs(a.x - b.x),2) + Math.pow(Math.abs(a.y - b.y),2));
-
+                    
                     var p1 = {
                         x: this.p1.x,
                         y: this.p1.y
                     }
-
+                    
                     for(var i=0.01;i<=1;i+=0.01) {
                         p2 = this.nthPoint(i);
                         this.length += distance(p1, p2);
@@ -295,7 +328,7 @@ module ParticleJSAnimations {
                     
                     var a = (1-n), a2 = a*a;
                     var b = n, b2 = b*b;
-
+                    
                     return {
                         x: a2*this.p1.x + 2*b*a*this.p2.x + b2*this.p3.x,
                         y: a2*this.p1.y + 2*b*a*this.p2.y + b2*this.p3.y
@@ -306,41 +339,38 @@ module ParticleJSAnimations {
         }
         
         public draw(context: ParticleJSContext) {
-
-
             
             if(this.firstDraw || !this.options.mouseRepel) {
                 this.firstDraw = false;
                 for(var i=0, atom:Atom=this.atomSet[i]; i<this.atomSet.length; i++,atom=this.atomSet[i]) { 
                     var origin: Point = {x: atom.origin.x + this.offset.x, y: atom.origin.y + this.offset.y};            
-                    atom.pos.x = origin.x;
-                    atom.pos.y = origin.y;
-                    atom.opacity = this.alpha;
+                    if(atom.animationDone) {
+                        atom.pos.x = origin.x;
+                        atom.pos.y = origin.y;
+                        atom.opacity = this.alpha;
+                    }
                     atom.draw(context);
-
+                    
                 }
                 return;
             }
-
+            
             var mouse = context.mousePosition;
             
             for(var i=0, atom:Atom=this.atomSet[i]; i<this.atomSet.length; i++,atom=this.atomSet[i]) {
                 
+                if (!atom.animationDone) {
+                    atom.draw(context);
+                    continue;
+                }
+                
                 var origin: Point = {x: atom.origin.x + this.offset.x, y: atom.origin.y + this.offset.y};
-
+                
                 atom.pos.x += atom.speed.x;
                 atom.pos.y += atom.speed.y;
-
+                
                 atom.opacity = this.alpha;
                 
-                if (!atom.animationDone) {
-                    atom.pos.x += (origin.x - atom.pos.x) / 2;
-                    atom.pos.y += (origin.y - atom.pos.y) / 2;
-                    
-                    if (Math.abs(atom.pos.x - origin.x) < 0.1 && Math.abs(atom.pos.y - origin.y) < 0.1) {
-                        atom.animationDone = true;
-                    }
-                }
                 
                 var posWRTMouse = {
                     x: atom.pos.x - mouse.x,
@@ -380,9 +410,7 @@ module ParticleJSAnimations {
                 var gravity = -distance2 / this.options.gravity;
                 gravity = Math.abs(gravity) > 0.1 ? -0.1 : gravity;
                 
-                
                 if (force < 0) force = 0;
-                
                 
                 if (isNaN(atom.speed.x))
                     atom.speed.x = 0;
@@ -391,7 +419,6 @@ module ParticleJSAnimations {
                 
                 atom.speed.x += forceDirection.x * force * context.options.animationInterval / this.options.forceFactor + gravityDirection.x * gravity * context.options.animationInterval;
                 atom.speed.y += forceDirection.y * force * context.options.animationInterval / this.options.forceFactor + gravityDirection.y * gravity * context.options.animationInterval;
-                
                 
                 atom.speed.y *= this.options.frictionFactor;
                 atom.speed.x *= this.options.frictionFactor;
@@ -404,21 +431,21 @@ module ParticleJSAnimations {
                     else
                         atom.blurRadius = 0.4;
                 }
-
+                
                 atom.draw(context);
-
+                
                 if(this.options.connectingLines) {
                     var ctx = context.canvasContext;
-                
+                    
                     ctx.beginPath();
                     ctx.lineWidth = this.options.connectingLineWidth;
-
+                    
                     var opacity = this.options.connectingLineOpacity;
-
+                    
                     ctx.moveTo(atom.pos.x, atom.pos.y);
                     if (i + 1 < this.atomSet.length) {
                         ctx.lineTo(this.atomSet[i+1].pos.x, this.atomSet[i+1].pos.y);
-
+                        
                         var d = Math.sqrt(Math.pow(this.atomSet[i+1].pos.x - atom.pos.x, 2) + Math.pow(this.atomSet[i+1].pos.y - atom.pos.y, 2));
                         var d2 = Math.sqrt(Math.pow(this.atomSet[i+1].origin.x - atom.origin.x, 2) + Math.pow(this.atomSet[i+1].origin.y - atom.origin.y, 2))
                         if (d <= d2 && d2 <= this.options.connectingLineMaxLength)
@@ -432,8 +459,7 @@ module ParticleJSAnimations {
                     ctx.strokeStyle = HEXAtoRGBA(this.options.connectingLineColor, opacity)
                     ctx.stroke();
                     ctx.closePath();
-                }
-                
+                } 
             }
         }
     }

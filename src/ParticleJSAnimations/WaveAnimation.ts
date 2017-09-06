@@ -42,6 +42,10 @@ module ParticleJSAnimations {
         private totalAtoms: number;
         private callback;
 
+        public dispose(): Array<Atom> {
+            return this.atomSet.splice(0,this.atomSet.length);
+        }
+
         constructor(totalAtoms: number,waves: Array<Wave>, options?: WaveDrawOptions) {
             this.options = <WaveDrawOptions>generateOptions(options, WaveAnimation.default);
             this.atomSet = [];
@@ -70,6 +74,7 @@ module ParticleJSAnimations {
 
             return key;
         }
+        
 
         public draw(context: ParticleJSContext) {
 

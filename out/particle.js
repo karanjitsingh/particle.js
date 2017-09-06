@@ -13,6 +13,12 @@ var Atom = (function () {
         this.pos = position ? { x: position.x, y: position.y } : { x: 0, y: 0 };
         this.origin = position ? { x: position.x, y: position.y } : { x: 0, y: 0 };
     }
+    Atom.prototype.dispose = function () {
+        return [];
+    };
+    Atom.prototype.animateToOrigin = function () {
+        this.animationDone = false;
+    };
     Atom.prototype.draw = function (context) {
         var ctx = context.canvasContext;
         if (this.options.pop) {
@@ -24,6 +30,14 @@ var Atom = (function () {
             }
             else
                 this.radius += (this.options.radius - this.radius) / this.radiusLag;
+        }
+        while (!this.animationDone) {
+            this.pos.x += (this.origin.x - this.pos.x) / 2;
+            this.pos.y += (this.origin.y - this.pos.y) / 2;
+            if (Math.abs(this.pos.x - this.origin.x) < 0.1 && Math.abs(this.pos.y - this.origin.y) < 0.1) {
+                this.animationDone = true;
+            }
+            this.draw(context);
         }
         ctx.beginPath();
         var colorSet = this.options.colorSet;
@@ -80,11 +94,11 @@ var ParticleJS = (function () {
     ParticleJS.prototype.removeDrawObject = function (drawObject) {
         for (var i = 0; i < this.DrawObjectCollection.length; i++) {
             if (this.DrawObjectCollection[i] == drawObject) {
-                this.DrawObjectCollection.splice(i, 1);
-                return i;
+                var drawObject = this.DrawObjectCollection.splice(i, 1)[0];
+                return drawObject.dispose();
             }
         }
-        return -1;
+        return null;
     };
     ParticleJS.prototype.draw = function () {
         if (this.options.beforeDraw)
@@ -126,7 +140,7 @@ function HEXAtoRGBA(hex, a) {
         "," + parseInt(hex.substr(4, 2), 16) +
         "," + a + ")";
 }
-/* Todo
+/* TODO
  * recursive option generation
  */
 function generateOptions(options, defaultOptions) {
@@ -142,13 +156,50 @@ function generateOptions(options, defaultOptions) {
                 newOptions[i] = options[i];
     return newOptions;
 }
+var ParticleJSAnimations;
+(function (ParticleJSAnimations) {
+    var RandomMotion = (function () {
+        function RandomMotion(options, atomSet) {
+            this.alpha = 1;
+            this.options = generateOptions(options, RandomMotion.default);
+            this.randomizeAtoms(atomSet);
+        }
+        RandomMotion.prototype.dispose = function () {
+            return this.atomSet.splice(0, this.atomSet.length);
+        };
+        RandomMotion.prototype.randomizeAtoms = function (atomSet) {
+            this.atomSet = atomSet.splice(0, atomSet.length);
+            for (var i = 0; i < this.atomSet.length; i++) {
+                this.atomSet[i].speed = {
+                    x: (this.options.minSpeed + Math.random() * (this.options.maxSpeed - this.options.minSpeed)) * (Math.random() > 0.5 ? -1 : 1),
+                    y: (this.options.minSpeed + Math.random() * (this.options.maxSpeed - this.options.minSpeed)) * (Math.random() > 0.5 ? 1 : -1)
+                };
+            }
+        };
+        RandomMotion.prototype.draw = function (context) {
+            for (var j = 0; j < this.atomSet.length; j++) {
+                var atom = this.atomSet[j];
+                atom.pos.x += atom.speed.x;
+                atom.pos.y += atom.speed.y;
+                atom.opacity = this.alpha;
+                atom.draw(context);
+            }
+        };
+        RandomMotion.default = {
+            minSpeed: 1,
+            maxSpeed: 5,
+        };
+        return RandomMotion;
+    }());
+    ParticleJSAnimations.RandomMotion = RandomMotion;
+})(ParticleJSAnimations || (ParticleJSAnimations = {}));
 /* TODO
- * readjustable atoms
- */
+* readjustable atoms
+*/
 var ParticleJSAnimations;
 (function (ParticleJSAnimations) {
     var SVGAnimation = (function () {
-        function SVGAnimation(path2d, options) {
+        function SVGAnimation(path2d, options, atomSet) {
             this.offset = { x: 0, y: 0 };
             this.alpha = 1;
             this.atomSet = [];
@@ -156,8 +207,11 @@ var ParticleJSAnimations;
             this.options = generateOptions(options, SVGAnimation.default);
             var path = (new SVGPath(path2d)).paths;
             this.GeneratePathObjects(path);
-            this.GenerateAtomSet();
+            this.GenerateAtomSet(atomSet);
         }
+        SVGAnimation.prototype.dispose = function () {
+            return this.atomSet;
+        };
         SVGAnimation.prototype.GeneratePathObjects = function (path) {
             this.pathObjects = [];
             var ctx;
@@ -186,21 +240,46 @@ var ParticleJSAnimations;
                 }
             }
         };
-        SVGAnimation.prototype.GenerateAtomSet = function () {
+        SVGAnimation.prototype.GenerateAtomSet = function (atomSet) {
             var density = this.options.lineDensity;
             var length = 0;
             for (var i = 0; i < this.pathObjects.length; i++)
                 length += this.pathObjects[i].length;
+            var itemCount = 0;
+            if (atomSet && atomSet.length > 0) {
+                this.firstDraw = false;
+            }
             for (var i = 0; i < this.pathObjects.length; i++) {
                 var bpl = Math.floor(this.pathObjects[i].length * density);
                 for (var j = 0; j < bpl; j++) {
                     var options;
                     var pos = this.pathObjects[i].nthPoint(j / bpl);
-                    var atom = new Atom(j, { x: 0, y: 0 }, {
-                        x: this.options.pathVariation * (0.5 - Math.random()) + pos.x,
-                        y: this.options.pathVariation * (0.5 - Math.random()) + pos.y
-                    }, 1, this.options.atomOptions);
-                    this.atomSet.push(atom);
+                    /* TODO
+                    * error handling - although i shouldn't have to worry about this because TS
+                    */
+                    if (atomSet && atomSet.length > 0) {
+                        var atom = atomSet.splice(0, 1)[0];
+                        this.atomSet.push(atom);
+                        atom.speed = { x: 0, y: 0 },
+                            atom.origin = {
+                                x: this.options.pathVariation * (0.5 - Math.random()) + pos.x,
+                                y: this.options.pathVariation * (0.5 - Math.random()) + pos.y
+                            };
+                        /* TODO
+                         * fuck offset...
+                         */
+                        atom.animateToOrigin();
+                        // Some options are applied only on instanciation
+                        atom.options = generateOptions(this.options.atomOptions, Atom.default);
+                    }
+                    else {
+                        var atom = new Atom(itemCount, { x: 0, y: 0 }, {
+                            x: this.options.pathVariation * (0.5 - Math.random()) + pos.x,
+                            y: this.options.pathVariation * (0.5 - Math.random()) + pos.y
+                        }, 1, this.options.atomOptions);
+                        this.atomSet.push(atom);
+                    }
+                    itemCount++;
                 }
             }
         };
@@ -209,26 +288,25 @@ var ParticleJSAnimations;
                 this.firstDraw = false;
                 for (var i = 0, atom = this.atomSet[i]; i < this.atomSet.length; i++, atom = this.atomSet[i]) {
                     var origin = { x: atom.origin.x + this.offset.x, y: atom.origin.y + this.offset.y };
-                    atom.pos.x = origin.x;
-                    atom.pos.y = origin.y;
-                    atom.opacity = this.alpha;
+                    if (atom.animationDone) {
+                        atom.pos.x = origin.x;
+                        atom.pos.y = origin.y;
+                        atom.opacity = this.alpha;
+                    }
                     atom.draw(context);
                 }
                 return;
             }
             var mouse = context.mousePosition;
             for (var i = 0, atom = this.atomSet[i]; i < this.atomSet.length; i++, atom = this.atomSet[i]) {
+                if (!atom.animationDone) {
+                    atom.draw(context);
+                    continue;
+                }
                 var origin = { x: atom.origin.x + this.offset.x, y: atom.origin.y + this.offset.y };
                 atom.pos.x += atom.speed.x;
                 atom.pos.y += atom.speed.y;
                 atom.opacity = this.alpha;
-                if (!atom.animationDone) {
-                    atom.pos.x += (origin.x - atom.pos.x) / 2;
-                    atom.pos.y += (origin.y - atom.pos.y) / 2;
-                    if (Math.abs(atom.pos.x - origin.x) < 0.1 && Math.abs(atom.pos.y - origin.y) < 0.1) {
-                        atom.animationDone = true;
-                    }
-                }
                 var posWRTMouse = {
                     x: atom.pos.x - mouse.x,
                     y: atom.pos.y - mouse.y
@@ -461,6 +539,9 @@ var ParticleJSAnimations;
             for (var j = 0; j < totalAtoms; j++)
                 this.atomSet.push(new Atom(j, { x: 0, y: 0 }, { x: j / totalAtoms * this.options.width, y: this.options.top }, this.alpha, this.options.atomOptions));
         }
+        WaveAnimation.prototype.dispose = function () {
+            return this.atomSet.splice(0, this.atomSet.length);
+        };
         WaveAnimation.prototype.addWave = function (wave) {
             this.waves.push(wave);
         };

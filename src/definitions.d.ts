@@ -20,10 +20,11 @@ interface ParticleJSContext {
     canvasContext: CanvasRenderingContext2D,
     mousePosition: Point,
     canvasHeight: number,
-    canvasWidth: number
+    canvasWidth: number,
     options: ParticleJSOptions
 }
 
 interface DrawObject {
     draw(context: ParticleJSContext): void,
+    dispose(): Array<Atom>
 }
