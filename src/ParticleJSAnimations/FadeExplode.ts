@@ -51,6 +51,11 @@ module ParticleJSAnimations {
 
                 atom.opacity -= atom.opacity/this.options.opacityLag;
 
+                if(atom.opacity < 0.01) {
+                    this.atomSet.splice(j,1);
+                    j--; continue;
+                }
+
                 if(this.options.boxed == true) {
                     if ((atom.pos.x - atom.options.radius < 0 && atom.speed.x < 0) || (atom.pos.x + atom.options.radius > context.canvasWidth && atom.speed.x > 0))
                         atom.speed.x = -1 * atom.speed.x;
