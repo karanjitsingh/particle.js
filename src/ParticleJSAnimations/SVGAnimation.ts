@@ -129,19 +129,20 @@ module ParticleJSAnimations {
                     */
                     
                     if(atomSet && atomSet.length > 0) {
-                        var atom = atomSet.splice(0,1)[0];
+
+                        var index = Math.floor(Math.random() * atomSet.length);
+
+                        var atom = atomSet.splice(index,1)[0];
                         this.atomSet.push(atom);
                         
+                        atom.index = itemCount;
                         atom.speed = {x:0, y:0},
                         atom.origin = {
                             x: this.options.pathVariation * (0.5 - Math.random()) + pos.x,
                             y: this.options.pathVariation * (0.5 - Math.random()) + pos.y
                         };
 
-                        /* TODO
-                         * fuck offset...
-                         */
-                        atom.animateToOrigin();
+                        atom.animationDone = false;
 
                         // Some options are applied only on instanciation
                         atom.options = <AtomDrawOptions> generateOptions(this.options.atomOptions, Atom.default);
@@ -359,12 +360,21 @@ module ParticleJSAnimations {
             
             for(var i=0, atom:Atom=this.atomSet[i]; i<this.atomSet.length; i++,atom=this.atomSet[i]) {
                 
+                var origin: Point = {x: atom.origin.x + this.offset.x, y: atom.origin.y + this.offset.y};
+                
                 if (!atom.animationDone) {
+                    atom.pos.x += (origin.x - atom.pos.x) / 2;
+                    atom.pos.y += (origin.y - atom.pos.y) / 2;
+                    atom.opacity += (this.alpha - atom.opacity) / 2;
+
+                    if (Math.abs(atom.pos.x - origin.x) < 0.1 && Math.abs(atom.pos.y - origin.y) < 0.1 && Math.abs(atom.opacity - this.alpha) < 0.1) {
+                        atom.animationDone = true;
+                    }
+        
                     atom.draw(context);
                     continue;
                 }
                 
-                var origin: Point = {x: atom.origin.x + this.offset.x, y: atom.origin.y + this.offset.y};
                 
                 atom.pos.x += atom.speed.x;
                 atom.pos.y += atom.speed.y;
@@ -456,7 +466,7 @@ module ParticleJSAnimations {
                         else
                             opacity = 0;
                     }
-                    ctx.strokeStyle = HEXAtoRGBA(this.options.connectingLineColor, opacity)
+                    ctx.strokeStyle = HEXAtoRGBA(this.options.connectingLineColor, opacity * this.alpha);
                     ctx.stroke();
                     ctx.closePath();
                 } 

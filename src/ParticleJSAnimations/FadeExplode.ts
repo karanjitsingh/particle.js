@@ -1,19 +1,22 @@
 module ParticleJSAnimations {
 
-    export interface RandomMotionOptions {
+    export interface FadeExplodeOptions {
         minSpeed: number,
         maxSpeed: number,
+        boxed: boolean,
+        opacityLag: number,
     }
     
-    export class RandomMotion implements DrawObject {
+    export class FadeExplode implements DrawObject {
 
-        private static default: RandomMotionOptions = {
-            minSpeed: 1,
-            maxSpeed: 5,
+        private static default: FadeExplodeOptions = {
+            minSpeed: 2,
+            maxSpeed: 10,
+            boxed: true,
+            opacityLag: 6
         }
 
-        public options: RandomMotionOptions;
-        public alpha = 1;
+        public options: FadeExplodeOptions;
 
         private atomSet: Array<Atom>
 
@@ -22,7 +25,7 @@ module ParticleJSAnimations {
         }
 
         constructor(options?: WaveDrawOptions, atomSet?: Array<Atom>) {
-            this.options = <RandomMotionOptions>generateOptions(options, RandomMotion.default);
+            this.options = <FadeExplodeOptions>generateOptions(options, FadeExplode.default);
             this.randomizeAtoms(atomSet);
         }
 
@@ -46,7 +49,14 @@ module ParticleJSAnimations {
                 atom.pos.x += atom.speed.x;
                 atom.pos.y += atom.speed.y;
 
-                atom.opacity = this.alpha;
+                atom.opacity -= atom.opacity/this.options.opacityLag;
+
+                if(this.options.boxed == true) {
+                    if ((atom.pos.x - atom.options.radius < 0 && atom.speed.x < 0) || (atom.pos.x + atom.options.radius > context.canvasWidth && atom.speed.x > 0))
+                        atom.speed.x = -1 * atom.speed.x;
+                    if ((atom.pos.y - atom.options.radius < 0 && atom.speed.y < 0) || (atom.pos.y + atom.options.radius > context.canvasHeight && atom.speed.y > 0))
+                        atom.speed.y = -1 * atom.speed.y;
+                }
 
                 atom.draw(context);
             }

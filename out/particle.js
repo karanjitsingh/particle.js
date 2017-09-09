@@ -5,7 +5,7 @@ var Atom = (function () {
         // No idea what to do with these
         this.radiusLag = 1;
         this.animateOpacity = true;
-        this.id = id;
+        this.index = id;
         this.options = generateOptions(options, Atom.default);
         this.radius = this.options.radius;
         this.opacity = opacity || 1;
@@ -15,9 +15,6 @@ var Atom = (function () {
     }
     Atom.prototype.dispose = function () {
         return [];
-    };
-    Atom.prototype.animateToOrigin = function () {
-        this.animationDone = false;
     };
     Atom.prototype.draw = function (context) {
         var ctx = context.canvasContext;
@@ -31,24 +28,16 @@ var Atom = (function () {
             else
                 this.radius += (this.options.radius - this.radius) / this.radiusLag;
         }
-        while (!this.animationDone) {
-            this.pos.x += (this.origin.x - this.pos.x) / 2;
-            this.pos.y += (this.origin.y - this.pos.y) / 2;
-            if (Math.abs(this.pos.x - this.origin.x) < 0.1 && Math.abs(this.pos.y - this.origin.y) < 0.1) {
-                this.animationDone = true;
-            }
-            this.draw(context);
-        }
         ctx.beginPath();
         var colorSet = this.options.colorSet;
         if (this.blurRadius == 0 || !this.options.blur) {
-            ctx.fillStyle = HEXAtoRGBA(colorSet[this.id % colorSet.length], this.opacity);
+            ctx.fillStyle = HEXAtoRGBA(colorSet[this.index % colorSet.length], this.opacity);
             ctx.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI * 2);
         }
         else {
             var radgrad = ctx.createRadialGradient(this.pos.x, this.pos.y, this.radius, this.pos.x, this.pos.y, this.radius + this.blurRadius * 30);
-            radgrad.addColorStop(0, HEXAtoRGBA(colorSet[this.id % colorSet.length], this.opacity));
-            radgrad.addColorStop(1, HEXAtoRGBA(colorSet[this.id % colorSet.length], 0));
+            radgrad.addColorStop(0, HEXAtoRGBA(colorSet[this.index % colorSet.length], this.opacity));
+            radgrad.addColorStop(1, HEXAtoRGBA(colorSet[this.index % colorSet.length], 0));
             ctx.fillStyle = radgrad;
             ctx.arc(this.pos.x, this.pos.y, this.radius + this.blurRadius * 30, Math.PI * 2, 0, false);
         }
@@ -158,16 +147,15 @@ function generateOptions(options, defaultOptions) {
 }
 var ParticleJSAnimations;
 (function (ParticleJSAnimations) {
-    var RandomMotion = (function () {
-        function RandomMotion(options, atomSet) {
-            this.alpha = 1;
-            this.options = generateOptions(options, RandomMotion.default);
+    var FadeExplode = (function () {
+        function FadeExplode(options, atomSet) {
+            this.options = generateOptions(options, FadeExplode.default);
             this.randomizeAtoms(atomSet);
         }
-        RandomMotion.prototype.dispose = function () {
+        FadeExplode.prototype.dispose = function () {
             return this.atomSet.splice(0, this.atomSet.length);
         };
-        RandomMotion.prototype.randomizeAtoms = function (atomSet) {
+        FadeExplode.prototype.randomizeAtoms = function (atomSet) {
             this.atomSet = atomSet.splice(0, atomSet.length);
             for (var i = 0; i < this.atomSet.length; i++) {
                 this.atomSet[i].speed = {
@@ -176,22 +164,30 @@ var ParticleJSAnimations;
                 };
             }
         };
-        RandomMotion.prototype.draw = function (context) {
+        FadeExplode.prototype.draw = function (context) {
             for (var j = 0; j < this.atomSet.length; j++) {
                 var atom = this.atomSet[j];
                 atom.pos.x += atom.speed.x;
                 atom.pos.y += atom.speed.y;
-                atom.opacity = this.alpha;
+                atom.opacity -= atom.opacity / this.options.opacityLag;
+                if (this.options.boxed == true) {
+                    if ((atom.pos.x - atom.options.radius < 0 && atom.speed.x < 0) || (atom.pos.x + atom.options.radius > context.canvasWidth && atom.speed.x > 0))
+                        atom.speed.x = -1 * atom.speed.x;
+                    if ((atom.pos.y - atom.options.radius < 0 && atom.speed.y < 0) || (atom.pos.y + atom.options.radius > context.canvasHeight && atom.speed.y > 0))
+                        atom.speed.y = -1 * atom.speed.y;
+                }
                 atom.draw(context);
             }
         };
-        RandomMotion.default = {
-            minSpeed: 1,
-            maxSpeed: 5,
+        FadeExplode.default = {
+            minSpeed: 2,
+            maxSpeed: 10,
+            boxed: true,
+            opacityLag: 6
         };
-        return RandomMotion;
+        return FadeExplode;
     }());
-    ParticleJSAnimations.RandomMotion = RandomMotion;
+    ParticleJSAnimations.FadeExplode = FadeExplode;
 })(ParticleJSAnimations || (ParticleJSAnimations = {}));
 /* TODO
 * readjustable atoms
@@ -258,17 +254,16 @@ var ParticleJSAnimations;
                     * error handling - although i shouldn't have to worry about this because TS
                     */
                     if (atomSet && atomSet.length > 0) {
-                        var atom = atomSet.splice(0, 1)[0];
+                        var index = Math.floor(Math.random() * atomSet.length);
+                        var atom = atomSet.splice(index, 1)[0];
                         this.atomSet.push(atom);
+                        atom.index = itemCount;
                         atom.speed = { x: 0, y: 0 },
                             atom.origin = {
                                 x: this.options.pathVariation * (0.5 - Math.random()) + pos.x,
                                 y: this.options.pathVariation * (0.5 - Math.random()) + pos.y
                             };
-                        /* TODO
-                         * fuck offset...
-                         */
-                        atom.animateToOrigin();
+                        atom.animationDone = false;
                         // Some options are applied only on instanciation
                         atom.options = generateOptions(this.options.atomOptions, Atom.default);
                     }
@@ -299,11 +294,17 @@ var ParticleJSAnimations;
             }
             var mouse = context.mousePosition;
             for (var i = 0, atom = this.atomSet[i]; i < this.atomSet.length; i++, atom = this.atomSet[i]) {
+                var origin = { x: atom.origin.x + this.offset.x, y: atom.origin.y + this.offset.y };
                 if (!atom.animationDone) {
+                    atom.pos.x += (origin.x - atom.pos.x) / 2;
+                    atom.pos.y += (origin.y - atom.pos.y) / 2;
+                    atom.opacity += (this.alpha - atom.opacity) / 2;
+                    if (Math.abs(atom.pos.x - origin.x) < 0.1 && Math.abs(atom.pos.y - origin.y) < 0.1 && Math.abs(atom.opacity - this.alpha) < 0.1) {
+                        atom.animationDone = true;
+                    }
                     atom.draw(context);
                     continue;
                 }
-                var origin = { x: atom.origin.x + this.offset.x, y: atom.origin.y + this.offset.y };
                 atom.pos.x += atom.speed.x;
                 atom.pos.y += atom.speed.y;
                 atom.opacity = this.alpha;
@@ -370,7 +371,7 @@ var ParticleJSAnimations;
                         else
                             opacity = 0;
                     }
-                    ctx.strokeStyle = HEXAtoRGBA(this.options.connectingLineColor, opacity);
+                    ctx.strokeStyle = HEXAtoRGBA(this.options.connectingLineColor, opacity * this.alpha);
                     ctx.stroke();
                     ctx.closePath();
                 }

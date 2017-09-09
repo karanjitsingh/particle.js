@@ -10,10 +10,10 @@ class Atom implements DrawObject {
         blur: true
     }
     
-    private id: number;
     private random: number;
     private radius: number;
-
+    
+    public index: number;
     public origin: Point;
     public speed: Point;
     public pos: Point;
@@ -31,7 +31,7 @@ class Atom implements DrawObject {
     }
     
     constructor(id: number, speed?: Point, position?: Point, opacity?: number, options?: AtomDrawOptions) {
-        this.id = id;
+        this.index = id;
         this.options = <AtomDrawOptions>generateOptions(options, Atom.default);
         this.radius = this.options.radius;
         this.opacity = opacity || 1;
@@ -39,10 +39,6 @@ class Atom implements DrawObject {
         this.pos = position ? {x: position.x, y:position.y} : { x:0, y:0 };
         this.origin = position ? {x: position.x, y:position.y} : { x:0, y:0 };
         
-    }
-
-    public animateToOrigin() {
-        this.animationDone = false;
     }
     
     public draw(context: ParticleJSContext) {
@@ -61,31 +57,19 @@ class Atom implements DrawObject {
                 this.radius += (this.options.radius - this.radius) / this.radiusLag;
         }
 
-        while(!this.animationDone) {
-            this.pos.x += (this.origin.x - this.pos.x) / 2;
-            this.pos.y += (this.origin.y - this.pos.y) / 2;
-            
-            if (Math.abs(this.pos.x - this.origin.x) < 0.1 && Math.abs(this.pos.y - this.origin.y) < 0.1) {
-                this.animationDone = true;
-            }
-
-            this.draw(context);
-        }
-
-        
         ctx.beginPath();
         
         var colorSet = this.options.colorSet;
         
         if (this.blurRadius == 0 || !this.options.blur) {
-            ctx.fillStyle = HEXAtoRGBA(colorSet[this.id % colorSet.length], this.opacity);
+            ctx.fillStyle = HEXAtoRGBA(colorSet[this.index % colorSet.length], this.opacity);
             ctx.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI * 2);
         }
         else {
             var radgrad = ctx.createRadialGradient(this.pos.x, this.pos.y, this.radius, this.pos.x, this.pos.y, this.radius + this.blurRadius * 30);
             
-            radgrad.addColorStop(0, HEXAtoRGBA(colorSet[this.id % colorSet.length], this.opacity));
-            radgrad.addColorStop(1, HEXAtoRGBA(colorSet[this.id % colorSet.length], 0));
+            radgrad.addColorStop(0, HEXAtoRGBA(colorSet[this.index % colorSet.length], this.opacity));
+            radgrad.addColorStop(1, HEXAtoRGBA(colorSet[this.index % colorSet.length], 0));
             
             ctx.fillStyle = radgrad;
             ctx.arc(this.pos.x, this.pos.y, this.radius + this.blurRadius * 30, Math.PI * 2, 0, false);
