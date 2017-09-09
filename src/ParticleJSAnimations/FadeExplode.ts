@@ -4,7 +4,7 @@ module ParticleJSAnimations {
         minSpeed: number,
         maxSpeed: number,
         boxed: boolean,
-        opacityLag: number,
+        animationFactor: number,
     }
     
     export class FadeExplode implements DrawObject {
@@ -13,7 +13,7 @@ module ParticleJSAnimations {
             minSpeed: 2,
             maxSpeed: 10,
             boxed: true,
-            opacityLag: 6
+            animationFactor: 8
         }
 
         public options: FadeExplodeOptions;
@@ -49,7 +49,7 @@ module ParticleJSAnimations {
                 atom.pos.x += atom.speed.x;
                 atom.pos.y += atom.speed.y;
 
-                atom.opacity -= atom.opacity/this.options.opacityLag;
+                atom.opacity -= atom.opacity/this.options.animationFactor;
 
                 if(atom.opacity < 0.01) {
                     this.atomSet.splice(j,1);

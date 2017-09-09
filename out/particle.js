@@ -169,7 +169,12 @@ var ParticleJSAnimations;
                 var atom = this.atomSet[j];
                 atom.pos.x += atom.speed.x;
                 atom.pos.y += atom.speed.y;
-                atom.opacity -= atom.opacity / this.options.opacityLag;
+                atom.opacity -= atom.opacity / this.options.animationFactor;
+                if (atom.opacity < 0.01) {
+                    this.atomSet.splice(j, 1);
+                    j--;
+                    continue;
+                }
                 if (this.options.boxed == true) {
                     if ((atom.pos.x - atom.options.radius < 0 && atom.speed.x < 0) || (atom.pos.x + atom.options.radius > context.canvasWidth && atom.speed.x > 0))
                         atom.speed.x = -1 * atom.speed.x;
@@ -183,7 +188,7 @@ var ParticleJSAnimations;
             minSpeed: 2,
             maxSpeed: 10,
             boxed: true,
-            opacityLag: 6
+            animationFactor: 8
         };
         return FadeExplode;
     }());
@@ -296,9 +301,9 @@ var ParticleJSAnimations;
             for (var i = 0, atom = this.atomSet[i]; i < this.atomSet.length; i++, atom = this.atomSet[i]) {
                 var origin = { x: atom.origin.x + this.offset.x, y: atom.origin.y + this.offset.y };
                 if (!atom.animationDone) {
-                    atom.pos.x += (origin.x - atom.pos.x) / 2;
-                    atom.pos.y += (origin.y - atom.pos.y) / 2;
-                    atom.opacity += (this.alpha - atom.opacity) / 2;
+                    atom.pos.x += (origin.x - atom.pos.x) / this.options.animationFactor;
+                    atom.pos.y += (origin.y - atom.pos.y) / this.options.animationFactor;
+                    atom.opacity += (this.alpha - atom.opacity) / this.options.animationFactor;
                     if (Math.abs(atom.pos.x - origin.x) < 0.1 && Math.abs(atom.pos.y - origin.y) < 0.1 && Math.abs(atom.opacity - this.alpha) < 0.1) {
                         atom.animationDone = true;
                     }
@@ -365,8 +370,8 @@ var ParticleJSAnimations;
                         var d2 = Math.sqrt(Math.pow(this.atomSet[i + 1].origin.x - atom.origin.x, 2) + Math.pow(this.atomSet[i + 1].origin.y - atom.origin.y, 2));
                         if (d <= d2 && d2 <= this.options.connectingLineMaxLength)
                             opacity = 0.5;
-                        else if (d <= d2 + 15 && d2 <= this.options.connectingLineMaxLength) {
-                            opacity = (d2 + 15 - d) / 15 * 0.5;
+                        else if (d <= d2 + this.options.connectingLineRelaxLength && d2 <= this.options.connectingLineMaxLength) {
+                            opacity = (d2 + this.options.connectingLineRelaxLength - d) / this.options.connectingLineRelaxLength * 0.5;
                         }
                         else
                             opacity = 0;
@@ -396,6 +401,8 @@ var ParticleJSAnimations;
             connectingLineOpacity: 0.5,
             connectingLineColor: "#FFFFFF",
             connectingLineMaxLength: 20,
+            connectingLineRelaxLength: 20,
+            animationFactor: 3,
         };
         SVGAnimation.Shapes = (_a = (function () {
                 function class_1() {

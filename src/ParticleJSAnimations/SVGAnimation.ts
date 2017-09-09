@@ -26,7 +26,9 @@ module ParticleJSAnimations {
         connectingLineWidth: number,
         connectingLineOpacity: number,
         connectingLineColor: string,
+        connectingLineRelaxLength: number,
         connectingLineMaxLength: number,
+        animationFactor:number,
     }
     
     export class SVGAnimation implements DrawObject {
@@ -50,6 +52,8 @@ module ParticleJSAnimations {
             connectingLineOpacity: 0.5,
             connectingLineColor: "#FFFFFF",
             connectingLineMaxLength: 20,
+            connectingLineRelaxLength: 20,
+            animationFactor: 3,
         }
         
         public options: SVGAnimationOptions;
@@ -363,9 +367,9 @@ module ParticleJSAnimations {
                 var origin: Point = {x: atom.origin.x + this.offset.x, y: atom.origin.y + this.offset.y};
                 
                 if (!atom.animationDone) {
-                    atom.pos.x += (origin.x - atom.pos.x) / 2;
-                    atom.pos.y += (origin.y - atom.pos.y) / 2;
-                    atom.opacity += (this.alpha - atom.opacity) / 2;
+                    atom.pos.x += (origin.x - atom.pos.x) / this.options.animationFactor;
+                    atom.pos.y += (origin.y - atom.pos.y) / this.options.animationFactor;
+                    atom.opacity += (this.alpha - atom.opacity) / this.options.animationFactor;
 
                     if (Math.abs(atom.pos.x - origin.x) < 0.1 && Math.abs(atom.pos.y - origin.y) < 0.1 && Math.abs(atom.opacity - this.alpha) < 0.1) {
                         atom.animationDone = true;
@@ -460,8 +464,8 @@ module ParticleJSAnimations {
                         var d2 = Math.sqrt(Math.pow(this.atomSet[i+1].origin.x - atom.origin.x, 2) + Math.pow(this.atomSet[i+1].origin.y - atom.origin.y, 2))
                         if (d <= d2 && d2 <= this.options.connectingLineMaxLength)
                             opacity = 0.5
-                        else if (d <= d2 + 15 && d2 <= this.options.connectingLineMaxLength) {
-                            opacity = (d2 + 15 - d) / 15 * 0.5;
+                        else if (d <= d2 + this.options.connectingLineRelaxLength && d2 <= this.options.connectingLineMaxLength) {
+                            opacity = (d2 + this.options.connectingLineRelaxLength - d) / this.options.connectingLineRelaxLength * 0.5;
                         }
                         else
                             opacity = 0;
