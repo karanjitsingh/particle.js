@@ -57,6 +57,7 @@ var Atom = (function () {
 var ParticleJS = (function () {
     function ParticleJS(canvas, drawObjectCollection, options) {
         var _this = this;
+        this.running = false;
         this.mouse = {
             x: NaN,
             y: NaN
@@ -110,9 +111,13 @@ var ParticleJS = (function () {
             this.options.afterDraw(this.ctx);
     };
     ParticleJS.prototype.start = function () {
-        this.timer = setInterval(this.draw.bind(this), this.options.animationInterval);
+        if (!this.running) {
+            this.timer = setInterval(this.draw.bind(this), this.options.animationInterval);
+            this.running = true;
+        }
     };
     ParticleJS.prototype.stop = function () {
+        this.running = false;
         clearTimeout(this.timer);
     };
     ParticleJS.default = {

@@ -14,6 +14,7 @@ class ParticleJS {
     private particles: Array<Atom>;
     private options: ParticleJSOptions;
     private DrawObjectCollection: Array<DrawObject>;
+    private running:boolean = false;
 
     public mouse: Point = {
         x: NaN,
@@ -81,11 +82,15 @@ class ParticleJS {
     }
     
     public start() {
-        this.timer = setInterval(this.draw.bind(this), this.options.animationInterval);
+        if(!this.running) {
+            this.timer = setInterval(this.draw.bind(this), this.options.animationInterval);
+            this.running = true;
+        }
     }
     
     
     public stop() {
+        this.running = false;
         clearTimeout(this.timer);
     }
 }
