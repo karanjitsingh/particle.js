@@ -53,8 +53,8 @@ module ParticleJSAnimations {
         }
         
         public options: SVGAnimationOptions;
-        public offset: Point = {x:0, y:0};
         public alpha: number = 1;
+        private offset: Point = {x:0, y:0};
         private atomSet: Array<Atom> = [];
         private pathObjects: Array<PathObject>;
         private firstDraw: boolean = true;
@@ -339,6 +339,14 @@ module ParticleJSAnimations {
             }
         }
         
+        public move(offset: Point) {
+            this.offset.x = offset.x;
+            this.offset.y = offset.y;
+            if(!this.firstDraw)
+                for(var i=0;i<this.atomSet.length;i++)
+                    this.atomSet[i].animationDone = false;
+        }
+
         public draw(context: ParticleJSContext) {
             
             if(this.firstDraw || !this.options.mouseRepel) {

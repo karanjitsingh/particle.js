@@ -58,7 +58,7 @@ var random;
 function collapse() {
 	var atomset = pjs.removeDrawObject(random);
 	var svg = new ParticleJSAnimations.SVGAnimation(d,null,atomset);
-	svg.offset = {x:100,y:200}
+	svg.move({x:100,y:200});
 	pjs.addDrawObject(svg);
 }
 
