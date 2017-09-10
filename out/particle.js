@@ -67,14 +67,10 @@ var ParticleJS = (function () {
         this.ctx = canvas.getContext('2d');
         this.options = generateOptions(options, ParticleJS.default);
         this.DrawObjectCollection = drawObjectCollection || [];
-        canvas.onmousemove = function (e) {
-            _this.mouse.x = e.layerX;
-            _this.mouse.y = e.layerY;
-        };
-        canvas.onmouseout = function (e) {
-            _this.mouse.x = NaN;
-            _this.mouse.y = NaN;
-        };
+        window.addEventListener("mousemove", function (e) {
+            _this.mouse.x = e.clientX;
+            _this.mouse.y = e.clientY;
+        });
         this.particles = [];
     }
     ParticleJS.prototype.addDrawObject = function (drawObject) {

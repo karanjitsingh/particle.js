@@ -29,15 +29,10 @@ class ParticleJS {
 
         this.DrawObjectCollection = drawObjectCollection || [];
         
-        canvas.onmousemove = (e) => {
-            this.mouse.x = e.layerX;
-            this.mouse.y = e.layerY;
-        }
-        
-        canvas.onmouseout = (e) => {
-            this.mouse.x = NaN;
-            this.mouse.y = NaN;
-        }
+        window.addEventListener("mousemove", (e) => {
+            this.mouse.x = e.clientX;
+            this.mouse.y = e.clientY;
+        });
         
         this.particles = [];
     }
