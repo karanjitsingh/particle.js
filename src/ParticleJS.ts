@@ -37,6 +37,11 @@ class ParticleJS {
         this.particles = [];
     }
     
+    public didResize(canvas: HTMLCanvasElement) {
+        this.W = canvas.width;
+        this.H = canvas.height;
+    }
+
     public addDrawObject(drawObject:DrawObject) {
         this.DrawObjectCollection.push(drawObject);
     }

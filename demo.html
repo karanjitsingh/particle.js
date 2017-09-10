@@ -64,7 +64,7 @@ function collapse() {
 
 function convert() {
 	var atomset = pjs.removeDrawObject(wave);
-	random = new ParticleJSAnimations.RandomMotion({minSpeed: 0, maxSpeed: 10}, atomset);
+	random = new ParticleJSAnimations.FadeExplode({minSpeed: 0, maxSpeed: 10}, atomset);
 	pjs.addDrawObject(random);
 	setTimeout(collapse, 500)
 }

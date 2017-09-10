@@ -1,7 +1,3 @@
-/* TODO
-* readjustable atoms
-*/
-
 module ParticleJSAnimations {
     interface PathObject {
         nthPoint: (n: number) => Point,

@@ -73,6 +73,10 @@ var ParticleJS = (function () {
         });
         this.particles = [];
     }
+    ParticleJS.prototype.didResize = function (canvas) {
+        this.W = canvas.width;
+        this.H = canvas.height;
+    };
     ParticleJS.prototype.addDrawObject = function (drawObject) {
         this.DrawObjectCollection.push(drawObject);
     };
@@ -190,9 +194,6 @@ var ParticleJSAnimations;
     }());
     ParticleJSAnimations.FadeExplode = FadeExplode;
 })(ParticleJSAnimations || (ParticleJSAnimations = {}));
-/* TODO
-* readjustable atoms
-*/
 var ParticleJSAnimations;
 (function (ParticleJSAnimations) {
     var SVGAnimation = (function () {
@@ -525,9 +526,6 @@ var ParticleJSAnimations;
     }());
     ParticleJSAnimations.SVGAnimation = SVGAnimation;
 })(ParticleJSAnimations || (ParticleJSAnimations = {}));
-/* TODO
- * test wave animation for changing properties
- */
 var ParticleJSAnimations;
 (function (ParticleJSAnimations) {
     var WaveAnimation = (function () {

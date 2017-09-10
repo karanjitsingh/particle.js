@@ -1,6 +1,3 @@
-/* TODO
- * test wave animation for changing properties
- */
 module ParticleJSAnimations {
     interface PathObject {
         nthPoint: (n: number) => Point,
