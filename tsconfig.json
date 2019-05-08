@@ -5,10 +5,11 @@
         "rootDir": "src",
         "outFile": "out/particle.js",
         "sourceMap": true,
-        "declaration": true
+        "declaration": true,
     },
     "exclude": [
         "node_modules",
-        "**/node_modules/*"
+        "**/node_modules/*",
+        "out"
     ]
 }
