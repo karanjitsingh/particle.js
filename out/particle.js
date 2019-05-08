@@ -1,4 +1,4 @@
-var Atom = (function () {
+var Atom = /** @class */ (function () {
     function Atom(id, speed, position, opacity, options) {
         this.animationDone = true;
         this.blurRadius = 0;
@@ -54,7 +54,7 @@ var Atom = (function () {
     };
     return Atom;
 }());
-var ParticleJS = (function () {
+var ParticleJS = /** @class */ (function () {
     function ParticleJS(canvas, drawObjectCollection, options) {
         var _this = this;
         this.running = false;
@@ -152,7 +152,7 @@ function generateOptions(options, defaultOptions) {
 }
 var ParticleJSAnimations;
 (function (ParticleJSAnimations) {
-    var FadeExplode = (function () {
+    var FadeExplode = /** @class */ (function () {
         function FadeExplode(options, atomSet) {
             this.options = generateOptions(options, FadeExplode.default);
             this.randomizeAtoms(atomSet);
@@ -201,7 +201,7 @@ var ParticleJSAnimations;
 })(ParticleJSAnimations || (ParticleJSAnimations = {}));
 var ParticleJSAnimations;
 (function (ParticleJSAnimations) {
-    var SVGAnimation = (function () {
+    var SVGAnimation = /** @class */ (function () {
         function SVGAnimation(path2d, options, atomSet) {
             this.alpha = 1;
             this.offset = { x: 0, y: 0 };
@@ -391,6 +391,7 @@ var ParticleJSAnimations;
                 }
             }
         };
+        var _a;
         SVGAnimation.default = {
             atomOptions: Atom.default,
             pathVariation: 0,
@@ -413,12 +414,12 @@ var ParticleJSAnimations;
             connectingLineRelaxLength: 20,
             animationFactor: 3,
         };
-        SVGAnimation.Shapes = (_a = (function () {
+        SVGAnimation.Shapes = (_a = /** @class */ (function () {
                 function class_1() {
                 }
                 return class_1;
             }()),
-            _a.Line = (function () {
+            _a.Line = /** @class */ (function () {
                 function class_2(x1, y1, x2, y2, scale) {
                     var theta;
                     var xdiff = Math.abs(x1 - x2) * scale;
@@ -444,7 +445,7 @@ var ParticleJSAnimations;
                 };
                 return class_2;
             }()),
-            _a.Arc = (function () {
+            _a.Arc = /** @class */ (function () {
                 function class_3(x, y, w, h, sa, ea, phi, scale) {
                     this.x = x * scale,
                         this.y = y * scale,
@@ -477,7 +478,7 @@ var ParticleJSAnimations;
                 };
                 return class_3;
             }()),
-            _a.BezierCurve = (function () {
+            _a.BezierCurve = /** @class */ (function () {
                 function class_4(p1, p2, p3, p4, scale) {
                     this.p1 = { x: p1.x * scale, y: p1.y * scale };
                     this.p2 = { x: p2.x * scale, y: p2.y * scale };
@@ -505,7 +506,7 @@ var ParticleJSAnimations;
                 };
                 return class_4;
             }()),
-            _a.QuadraticCurve = (function () {
+            _a.QuadraticCurve = /** @class */ (function () {
                 function class_5(p1, p2, p3, scale) {
                     this.p1 = { x: p1.x * scale, y: p1.y * scale };
                     this.p2 = { x: p2.x * scale, y: p2.y * scale };
@@ -534,13 +535,12 @@ var ParticleJSAnimations;
             }()),
             _a);
         return SVGAnimation;
-        var _a;
     }());
     ParticleJSAnimations.SVGAnimation = SVGAnimation;
 })(ParticleJSAnimations || (ParticleJSAnimations = {}));
 var ParticleJSAnimations;
 (function (ParticleJSAnimations) {
-    var WaveAnimation = (function () {
+    var WaveAnimation = /** @class */ (function () {
         function WaveAnimation(totalAtoms, waves, options) {
             this.alpha = 1;
             this.options = generateOptions(options, WaveAnimation.default);
@@ -622,7 +622,7 @@ var RegexPatterns;
     RegexPatterns[RegexPatterns["WS"] = 2] = "WS";
     RegexPatterns[RegexPatterns["Commands"] = 3] = "Commands";
 })(RegexPatterns || (RegexPatterns = {}));
-var SVGPath = (function () {
+var SVGPath = /** @class */ (function () {
     function SVGPath(d) {
         this.paths = [];
         this.parseError = false;
