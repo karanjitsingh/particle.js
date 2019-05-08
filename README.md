@@ -2,8 +2,8 @@
 
 A an experimental javascript canvas library for fancy particle animations like wave, repel from mouse, random movement etc. For displaying text with the particles the next currently needs to be explicitly defined in the term of lines and arc (something I'm still working on).
 
-An implimentation of particle.js on the [Headout careers page](https://www.headout.com/careers)
-![Imgur](http://i.imgur.com/pOgwZSV.png)
+An implimentation of particle.js on the [Headout careers page](https://www.headout.com/careers#canvasZeppelinParticles)
+[![Imgur](http://i.imgur.com/pOgwZSV.png)](https://www.headout.com/careers#canvasZeppelinParticles)
 
 ### What's next?
 
