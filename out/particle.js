@@ -12,6 +12,7 @@ var Atom = /** @class */ (function () {
         this.speed = speed || { x: 0, y: 0 };
         this.pos = position ? { x: position.x, y: position.y } : { x: 0, y: 0 };
         this.origin = position ? { x: position.x, y: position.y } : { x: 0, y: 0 };
+        this.scale = this.options.defaultScale;
     }
     Atom.prototype.dispose = function () {
         return [];
@@ -32,7 +33,7 @@ var Atom = /** @class */ (function () {
         var colorSet = this.options.colorSet;
         if (this.blurRadius == 0 || !this.options.blur) {
             ctx.fillStyle = HEXAtoRGBA(colorSet[this.index % colorSet.length], this.opacity);
-            ctx.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI * 2);
+            ctx.arc(this.pos.x, this.pos.y, this.radius * this.scale, 0, Math.PI * 2);
         }
         else {
             var radgrad = ctx.createRadialGradient(this.pos.x, this.pos.y, this.radius, this.pos.x, this.pos.y, this.radius + this.blurRadius * 30);
@@ -50,7 +51,8 @@ var Atom = /** @class */ (function () {
         popProbability: 0.001,
         radius: 2,
         colorSet: ["#E04836", "#F39D41", "#DDDDDD"],
-        blur: true
+        blur: true,
+        defaultScale: 1,
     };
     return Atom;
 }());
@@ -362,9 +364,17 @@ var ParticleJSAnimations;
                     if (distance2 <= this.options.minBlurDistance)
                         atom.blurRadius = 0;
                     else if (distance2 <= this.options.maxRepelDistance)
-                        atom.blurRadius = (distance2 - this.options.minBlurDistance) / this.options.marginBlurDistance * 0.4;
+                        atom.blurRadius = (distance2 - this.options.minBlurDistance) / this.options.marginBlurDistance * this.options.blurFactor;
                     else
-                        atom.blurRadius = 0.4;
+                        atom.blurRadius = this.options.blurFactor;
+                }
+                if (this.options.enlargeFactor > 0 && this.options.enlargeFactor != 1) {
+                    if (distance2 <= this.options.minEnlargeDistance)
+                        atom.scale = 1;
+                    else if (distance2 <= this.options.maxRepelDistance)
+                        atom.scale = atom.options.defaultScale + (distance2 - this.options.minEnlargeDistance) / this.options.marginEnlargeDistance * (this.options.enlargeFactor - atom.options.defaultScale);
+                    else
+                        atom.scale = this.options.enlargeFactor;
                 }
                 atom.draw(context);
                 if (this.options.connectingLines) {
@@ -403,7 +413,12 @@ var ParticleJSAnimations;
             maxRepelDistance: 100,
             minBlurDistance: 50,
             maxBlurDistance: 200,
+            blurFactor: 0.4,
             marginBlurDistance: 75,
+            enlargeFactor: 1,
+            minEnlargeDistance: 50,
+            maxEnlargeDistance: 200,
+            marginEnlargeDistance: 75,
             gravity: 1000,
             frictionFactor: 0.9,
             connectingLines: false,

@@ -14,7 +14,7 @@ module ParticleJSAnimations {
     }
     
     export interface WaveDrawOptions {
-        readonly atomOptions: AtomDrawOptions
+        readonly atomOptions: Partial<AtomDrawOptions>;
         scale: number,
         waveCollection: Array<Wave>,
         top: number,
@@ -43,7 +43,7 @@ module ParticleJSAnimations {
             return this.atomSet.splice(0,this.atomSet.length);
         }
 
-        constructor(totalAtoms: number,waves: Array<Wave>, options?: WaveDrawOptions) {
+        constructor(totalAtoms: number,waves: Array<Wave>, options?: Partial<WaveDrawOptions>) {
             this.options = <WaveDrawOptions>generateOptions(options, WaveAnimation.default);
             this.atomSet = [];
             this.waves = [];

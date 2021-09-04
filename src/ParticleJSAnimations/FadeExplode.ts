@@ -24,7 +24,7 @@ module ParticleJSAnimations {
             return this.atomSet.splice(0,this.atomSet.length);
         }
 
-        constructor(options?: WaveDrawOptions, atomSet?: Array<Atom>) {
+        constructor(options?: Partial<WaveDrawOptions>, atomSet?: Array<Atom>) {
             this.options = <FadeExplodeOptions>generateOptions(options, FadeExplode.default);
             this.randomizeAtoms(atomSet);
         }

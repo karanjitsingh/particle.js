@@ -5,7 +5,7 @@ module ParticleJSAnimations {
     }
     
     export interface SVGAnimationOptions {
-        atomOptions: AtomDrawOptions
+        atomOptions: Partial<AtomDrawOptions>
         pathVariation: number,
         lineDensity: number,
         scale: number,
@@ -16,6 +16,12 @@ module ParticleJSAnimations {
         minBlurDistance: number,
         maxBlurDistance: number,
         marginBlurDistance: number,
+        blurFactor: number,
+        enlargeFactor: number,
+        minEnlargeDistance: number,
+        maxEnlargeDistance: number,
+        marginEnlargeDistance: number,
+
         gravity: number,
         frictionFactor: number,
         connectingLines: boolean,
@@ -40,7 +46,12 @@ module ParticleJSAnimations {
             maxRepelDistance: 100,
             minBlurDistance: 50,
             maxBlurDistance: 200,
+            blurFactor: 0.4,
             marginBlurDistance: 75,
+            enlargeFactor: 1,
+            minEnlargeDistance: 50,
+            maxEnlargeDistance: 200,
+            marginEnlargeDistance: 75,
             gravity: 1000,
             frictionFactor: 0.9,
             connectingLines: false,
@@ -59,7 +70,7 @@ module ParticleJSAnimations {
         private pathObjects: Array<PathObject>;
         private firstDraw: boolean = true;
         
-        constructor(path2d: string, options?: SVGAnimationOptions, atomSet?: Array<Atom>) {
+        constructor(path2d: string, options?: Partial<SVGAnimationOptions>, atomSet?: Array<Atom>) {
             this.options = <SVGAnimationOptions>generateOptions(options, SVGAnimation.default);
             var path = (new SVGPath(path2d)).paths;
             this.GeneratePathObjects(path);
@@ -445,9 +456,18 @@ module ParticleJSAnimations {
                     if (distance2 <= this.options.minBlurDistance)
                         atom.blurRadius = 0;
                     else if (distance2 <= this.options.maxRepelDistance)
-                        atom.blurRadius = (distance2 - this.options.minBlurDistance) / this.options.marginBlurDistance * 0.4;
+                        atom.blurRadius = (distance2 - this.options.minBlurDistance) / this.options.marginBlurDistance * this.options.blurFactor;
                     else
-                        atom.blurRadius = 0.4;
+                        atom.blurRadius = this.options.blurFactor;
+                }
+
+                if(this.options.enlargeFactor > 0 && this.options.enlargeFactor != 1) {
+                    if (distance2 <= this.options.minEnlargeDistance)
+                        atom.scale = 1;
+                    else if (distance2 <= this.options.maxRepelDistance)
+                        atom.scale = atom.options.defaultScale + (distance2 - this.options.minEnlargeDistance) / this.options.marginEnlargeDistance * (this.options.enlargeFactor - atom.options.defaultScale);
+                    else
+                        atom.scale = this.options.enlargeFactor;
                 }
                 
                 atom.draw(context);
